@@ -6,12 +6,15 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 import plotly.graph_objects as go
-from plotly_templates import dark_template
+# from plotly_templates import dark_template
 import pandas as pd
 from openbb import obb
 from datetime import datetime
+from fastapi.staticfiles import StaticFiles
 
 app = FastAPI()
+
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 origins = [
     "https://pro.openbb.co",
@@ -40,38 +43,38 @@ def get_widgets():
         content=json.load((Path(__file__).parent.resolve() / "widgets.json").open())
     )
 
-@app.get("/chains")
-def get_chains():
-    """Get current TVL of all chains using Defi LLama"""
-    params = {}
-    response = requests.get("https://api.llama.fi/v2/chains", params=params)
+# @app.get("/chains")
+# def get_chains():
+#     """Get current TVL of all chains using Defi LLama"""
+#     params = {}
+#     response = requests.get("https://api.llama.fi/v2/chains", params=params)
 
-    if response.status_code == 200:
-        # Create a DataFrame from the JSON data
-        df = pd.DataFrame(response.json())
+#     if response.status_code == 200:
+#         # Create a DataFrame from the JSON data
+#         df = pd.DataFrame(response.json())
 
-        # Sort the DataFrame by 'tvl' in descending order and select the top 30
-        top_30_df = df.sort_values(by='tvl', ascending=False).head(30)
+#         # Sort the DataFrame by 'tvl' in descending order and select the top 30
+#         top_30_df = df.sort_values(by='tvl', ascending=False).head(30)
 
-        # Create a bar chart using Plotly
-        figure = go.Figure(
-            data=[go.Bar(x=top_30_df["tokenSymbol"], y=top_30_df["tvl"])],
-            # Apply the dark template - see plotly_templates.py
-            layout=go.Layout(
-                template=dark_template,
-                title="Top 30 Chains by TVL",
-                xaxis_title="Token Symbol",
-                yaxis_title="Total Value Locked (TVL)"
-            )
-        )
+#         # Create a bar chart using Plotly
+#         figure = go.Figure(
+#             data=[go.Bar(x=top_30_df["tokenSymbol"], y=top_30_df["tvl"])],
+#             # Apply the dark template - see plotly_templates.py
+#             layout=go.Layout(
+#                 template=dark_template,
+#                 title="Top 30 Chains by TVL",
+#                 xaxis_title="Token Symbol",
+#                 yaxis_title="Total Value Locked (TVL)"
+#             )
+#         )
 
-        # return the plotly json
-        return json.loads(figure.to_json())
+#         # return the plotly json
+#         return json.loads(figure.to_json())
 
-    print(f"Request error {response.status_code}: {response.text}")
-    return JSONResponse(
-        content={"error": response.text}, status_code=response.status_code
-    )
+#     print(f"Request error {response.status_code}: {response.text}")
+#     return JSONResponse(
+#         content={"error": response.text}, status_code=response.status_code
+#     )
 
 # Example of a Plotly chart widget
 @app.get("/market_snapshot")
@@ -430,17 +433,10 @@ def get_market_snapshot():
                 xanchor="right",
                 yanchor="middle"
             )
-
         # Update layout
         fig.update_layout(
-            title=dict(
-                text="Market Snapshot",
-                font=dict(size=32, color='black'),
-                x=0,
-                y=0.95
-            ),
-            margin=dict(l=20, r=20, t=100, b=20),
-            height=150 + (len(df) * 40),  # Reduced from 200 + (len(df) * 60)
+            margin=dict(l=20, r=20, t=10, b=30),  # Increased bottom margin from 20 to 40
+            height=len(df) * 40,  # Added 20px more height for spacing
             width=900,  # Increased width from 800 to 900 for more spacing
             plot_bgcolor='white',
             paper_bgcolor='white',
@@ -459,24 +455,10 @@ def get_market_snapshot():
             )
         )
 
-        fig.add_layout_image(
-            dict(
-                source="obd.png",
-                xref="paper",
-                yref="paper",
-                x=1.01,
-                y=1.25,  # Positioned above the table area
-                sizex=0.23,
-                sizey=0.15,
-                xanchor="right",
-                yanchor="top"
-            )
-        )
-
         # Add a footer with data source information
         fig.add_annotation(
             x=0,
-            y=0,
+            y=-0.05,  # Moved down from 0 to -0.05 to increase gap
             text=f"<i><span style='font-size:12px'>Market data as of {datetime.now().strftime('%A')} {datetime.now().strftime('%-I:%M %p')} ET</span></i><br><span style='font-size:9px'>Table: Phil Rosen, Opening Bell Daily • Source: Yahoo Finance</span>",
             showarrow=False,
             font=dict(color="gray", size=10),
@@ -487,11 +469,21 @@ def get_market_snapshot():
             align="left"
         )
 
-        # Add padding at the bottom to accommodate the footer
-        fig.update_layout(
-            margin=dict(l=20, r=20, t=100, b=10)
+        # Also on GitHub here: https://github.com/user-attachments/assets/2ff23602-0f7b-4604-997f-eca2757cec9e
+        # But doesn't seem to work :(
+        fig.add_layout_image(
+            dict(
+                source="/static/obd.png",
+                xref="paper",
+                yref="paper",
+                x=1.0,
+                y=0.0,
+                sizex=0.23,
+                sizey=0.15,
+                xanchor="right",
+                yanchor="bottom"
+            )
         )
-
         # return the plotly json
         return json.loads(fig.to_json())
     

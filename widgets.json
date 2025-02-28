@@ -1,19 +1,8 @@
 {
-    "chains": {
-        "name": "Chains chart example Plotly",
-        "description": "Get current TVL of all chains and plot it with Plotly",
-        "category": "Crypto",
-        "type": "chart",
-        "endpoint": "chains",
-        "gridData": {
-        "w": 40,
-        "h": 9
-        }
-    },
     "market-snapshot": {
       "name": "Market Snapshot",
       "description": "Market Snapshot from Phil Rosen including DJIA, S&P 500, NASDSAQ, Russel 2K, Gold, Bitcoin, Brent Crude, and 10-year Treasury",
-      "category": "Crypto",
+      "category": "Macro",
       "type": "chart",
       "endpoint": "market_snapshot",
       "gridData": {
