@@ -149,6 +149,15 @@ def get_market_snapshot():
 
         # Create the figure
         fig = go.Figure()
+
+        fig.add_trace(go.Scatter(   
+            x=[0], 
+            y=[0],
+            mode='markers',
+            marker=dict(opacity=0, size=0),
+            showlegend=False,
+            hoverinfo='none'
+        ))
         # Find max absolute values for scaling
         max_daily_abs = max(abs(df['1-day change'].max()), abs(df['1-day change'].min()))
         max_ytd_abs = max(abs(df['YTD'].max()), abs(df['YTD'].min()))
