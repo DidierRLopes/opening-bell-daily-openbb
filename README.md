@@ -1,6 +1,6 @@
-# Opening Bell Daily for OpenBB Workspace
+# Opening Bell Daily Market Snapshot widget for OpenBB Workspace
 
-![Example Output](example_output.png)
+<img width="943" alt="Screenshot 2025-03-01 at 12 04 47 AM" src="https://github.com/user-attachments/assets/a5a7766e-faf9-4d48-8fdb-68b97bc2924c" />
 
 Add to your OpenBB workspace by adding the following custom backend: https://openbb-opening-bell-daily.fly.dev
 
@@ -12,4 +12,4 @@ You may also run it locally with
 uvicorn main:app --port 8080
 ````
 
-and update the custom backend accordingly.
+and update the custom backend URL accordingly.
