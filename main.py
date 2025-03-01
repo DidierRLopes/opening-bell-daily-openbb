@@ -43,38 +43,9 @@ def get_widgets():
         content=json.load((Path(__file__).parent.resolve() / "widgets.json").open())
     )
 
-# @app.get("/chains")
-# def get_chains():
-#     """Get current TVL of all chains using Defi LLama"""
-#     params = {}
-#     response = requests.get("https://api.llama.fi/v2/chains", params=params)
-
-#     if response.status_code == 200:
-#         # Create a DataFrame from the JSON data
-#         df = pd.DataFrame(response.json())
-
-#         # Sort the DataFrame by 'tvl' in descending order and select the top 30
-#         top_30_df = df.sort_values(by='tvl', ascending=False).head(30)
-
-#         # Create a bar chart using Plotly
-#         figure = go.Figure(
-#             data=[go.Bar(x=top_30_df["tokenSymbol"], y=top_30_df["tvl"])],
-#             # Apply the dark template - see plotly_templates.py
-#             layout=go.Layout(
-#                 template=dark_template,
-#                 title="Top 30 Chains by TVL",
-#                 xaxis_title="Token Symbol",
-#                 yaxis_title="Total Value Locked (TVL)"
-#             )
-#         )
-
-#         # return the plotly json
-#         return json.loads(figure.to_json())
-
-#     print(f"Request error {response.status_code}: {response.text}")
-#     return JSONResponse(
-#         content={"error": response.text}, status_code=response.status_code
-#     )
+@app.get("/health")
+def health_check():
+    return {"status": "healthy"}
 
 # Example of a Plotly chart widget
 @app.get("/market_snapshot")
@@ -459,7 +430,7 @@ def get_market_snapshot():
         fig.add_annotation(
             x=0,
             y=-0.05,  # Moved down from 0 to -0.05 to increase gap
-            text=f"<i><span style='font-size:12px'>Market data as of {datetime.now().strftime('%A')} {datetime.now().strftime('%-I:%M %p')} ET</span></i><br><span style='font-size:9px'>Table: Phil Rosen, Opening Bell Daily • Source: Yahoo Finance</span>",
+            text=f"<i><span style='font-size:12px'>Market data as of {datetime.now(tz=pd.Timestamp.tz_localize(datetime.now(), 'America/New_York').tzinfo).strftime('%A')} {datetime.now(tz=pd.Timestamp.tz_localize(datetime.now(), 'America/New_York').tzinfo).strftime('%-I:%M %p')} ET</span></i><br><span style='font-size:9px'>Table: Phil Rosen, Opening Bell Daily • Source: Yahoo Finance</span>",
             showarrow=False,
             font=dict(color="gray", size=10),
             xref="paper",
