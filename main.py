@@ -68,7 +68,7 @@ def get_market_snapshot():
             "^DJI": "DJIA",
             "^GSPC": "S&P 500",
             "^NDX": "NASDSAQ",
-            "^RUT": "Russel 2K",
+            "^RUT": "Russell 2K",
             "GC=F": "Gold",
             "BTC-USD": "Bitcoin",
             "BZ=F": "Brent Crude",
@@ -210,7 +210,7 @@ def get_market_snapshot():
                     x1=1,
                     y0=1.0 - header_height - ((i+1) * row_height),
                     y1=1.0 - header_height - (i * row_height),
-                    fillcolor='rgba(240, 240, 240, 0.5)',
+                    fillcolor='#edf7f8',
                     line=dict(width=0),
                     xref="paper",
                     yref="paper"
@@ -419,8 +419,8 @@ def get_market_snapshot():
             margin=dict(l=20, r=20, t=10, b=30),  # Increased bottom margin from 20 to 40
             height=len(df) * 40,  # Added 20px more height for spacing
             width=900,  # Increased width from 800 to 900 for more spacing
-            plot_bgcolor='white',
-            paper_bgcolor='white',
+            plot_bgcolor='#F4FEFF',
+            paper_bgcolor='#F4FEFF',
             dragmode=False,  # Disable dragging
             xaxis=dict(
                 showticklabels=False,
