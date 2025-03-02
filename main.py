@@ -44,11 +44,20 @@ def get_widgets():
         content=json.load((Path(__file__).parent.resolve() / "widgets.json").open())
     )
 
+
+@app.get("/templates.json")
+def get_templates():
+    """Templates configuration file for the OpenBB Custom Backend"""
+    return JSONResponse(
+        content=json.load((Path(__file__).parent.resolve() / "templates.json").open())
+    )
+
+
 @app.get("/health")
 def health_check():
     return {"status": "healthy"}
 
-# Example of a Plotly chart widget
+
 @app.get("/market_snapshot")
 def get_market_snapshot():
     """Get current market snapshot of major indices and assets"""

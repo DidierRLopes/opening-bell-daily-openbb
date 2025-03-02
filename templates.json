@@ -1,0 +1,24 @@
+[
+  {
+    "name": "Opening Bell Daily",
+    "img": "https://github.com/user-attachments/assets/f86dd4eb-c70d-4d5c-be7b-9cff11c9e6b5",
+    "description": "This has widgets that are utilized by Phil Rosen when writing Opening Bell Daily (https://www.openingbelldailynews.com/)",
+    "allowCustomization": true,
+    "tabs": {
+      "": {
+        "id": "",
+        "name": "",
+        "layout": [
+          {
+            "i": "market-snapshot",
+            "x": 0,
+            "y": 0,
+            "w": 40,
+            "h": 14
+          }
+        ]
+      }
+    },
+    "groups": []
+  }
+]
