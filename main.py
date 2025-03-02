@@ -67,7 +67,7 @@ def get_market_snapshot():
         symbols = {
             "^DJI": "DJIA",
             "^GSPC": "S&P 500",
-            "^NDX": "NASDSAQ",
+            "^NDX": "NASDAQ",
             "^RUT": "Russell 2K",
             "GC=F": "Gold",
             "BTC-USD": "Bitcoin",
