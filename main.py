@@ -421,6 +421,7 @@ def get_market_snapshot():
             )
         # Update layout
         fig.update_layout(
+            title="",
             margin=dict(l=20, r=20, t=10, b=30),  # Increased bottom margin from 20 to 40
             height=len(df) * 40,  # Added 20px more height for spacing
             width=900,  # Increased width from 800 to 900 for more spacing
