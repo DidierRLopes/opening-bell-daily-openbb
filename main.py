@@ -12,6 +12,8 @@ from openbb import obb
 from datetime import datetime
 from fastapi.staticfiles import StaticFiles
 import pytz
+import base64
+
 
 app = FastAPI()
 
@@ -19,6 +21,7 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 
 origins = [
     "https://pro.openbb.co",
+    "https://pro.openbb.dev",
     "https://excel.openbb.co"
 ]
 
@@ -79,6 +82,8 @@ def get_market_snapshot():
         end_date = datetime.now()
         start_date = datetime(end_date.year, 1, 1)  # Start of the year for YTD
 
+        image_path = Path(__file__).parent.resolve() / "obd.png"
+        
         # Create a list to store our results
         results = []
 
@@ -435,11 +440,11 @@ def get_market_snapshot():
                 showline=False
             )
         )
-
-        # Add a footer with data source information
+        
+        # Add the text annotation on the left
         fig.add_annotation(
             x=0,
-            y=-0.05,  # Moved down from 0 to -0.05 to increase gap
+            y=-0.01,
             text=f"<i><span style='font-size:12px'>Market data as of {datetime.now().astimezone(pytz.timezone('America/New_York')).strftime('%A')} {datetime.now().astimezone(pytz.timezone('America/New_York')).strftime('%-I:%M %p')} ET</span></i><br><span style='font-size:9px'>Table: Phil Rosen, Opening Bell Daily • Source: Yahoo Finance</span>",
             showarrow=False,
             font=dict(color="gray", size=10),
@@ -450,21 +455,34 @@ def get_market_snapshot():
             align="left"
         )
 
-        # Also on GitHub here: https://github.com/user-attachments/assets/2ff23602-0f7b-4604-997f-eca2757cec9e
-        # But doesn't seem to work :(
-        fig.add_layout_image(
-            dict(
-                source="/static/obd.png",
-                xref="paper",
-                yref="paper",
-                x=1.0,
-                y=0.0,
-                sizex=0.23,
-                sizey=0.15,
-                xanchor="right",
-                yanchor="bottom"
+        # Add a footer with data source information and logo on the same line
+        image_path = Path(__file__).parent.resolve() / "static" / "obd.png"
+        
+        # Add logo on the right if available
+        if image_path.exists():
+            # Use the already imported base64 module
+            with open(image_path, "rb") as img_file:
+                encoded_image = base64.b64encode(img_file.read()).decode('utf-8')
+                img_src = f"data:image/png;base64,{encoded_image}"
+            
+            fig.add_layout_image(
+                dict(
+                    source=img_src,
+                    xref="paper",
+                    yref="paper",
+                    x=1.01,  # Changed from 0.98 to 1.0 to move it closer to the right side
+                    y=-0.05,  # Aligned with the annotation y-position
+                    sizex=0.18,
+                    sizey=0.15,
+                    xanchor="right", 
+                    yanchor="bottom",
+                    layer="above",
+                    opacity=1.0,
+                )
             )
-        )
+        else:
+            print(f"Image not found at: {image_path}")
+
         # return the plotly json
         return json.loads(fig.to_json())
     
