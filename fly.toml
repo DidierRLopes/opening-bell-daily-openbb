@@ -25,7 +25,7 @@ kill_timeout = '5s'
   force_https = true
   auto_stop_machines = true
   auto_start_machines = true
-  min_machines_running = 0
+  min_machines_running = 1
   processes = ['app']
 
   [[http_service.ports]]
@@ -43,11 +43,11 @@ kill_timeout = '5s'
     soft_limit = 20
 
   [[http_service.checks]]
-    interval = '15s'
-    timeout = '2s'
-    grace_period = '1s'
-    path = '/health'
-    method = 'GET'
+  grace_period = "30s"
+  interval = "30s"
+  method = "GET"
+  timeout = "10s"
+  path = "/health"
 
 [[vm]]
   memory = '1gb'
