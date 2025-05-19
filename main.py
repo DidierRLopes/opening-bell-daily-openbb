@@ -70,7 +70,7 @@ def get_market_snapshot():
         symbols = {
             "^DJI": "DJIA",
             "^GSPC": "S&P 500",
-            "^IXIC": "NASDAQ",
+            "^IXIC": "NASDAQ*",
             "^RUT": "Russell 2K",
             "GC=F": "Gold",
             "BTC-USD": "Bitcoin",
@@ -446,7 +446,7 @@ def get_market_snapshot():
         fig.add_annotation(
             x=0,
             y=-0.01,
-            text=f"<i><span style='font-size:12px'>Market data as of {datetime.now().astimezone(pytz.timezone('America/New_York')).strftime('%A')} {datetime.now().astimezone(pytz.timezone('America/New_York')).strftime('%-I:%M %p')} ET</span></i><br><span style='font-size:9px'>Table: Phil Rosen, Opening Bell Daily • Source: Yahoo Finance</span>",
+            text=f"<i><span style='font-size:12px'>Market data as of {datetime.now().astimezone(pytz.timezone('America/New_York')).strftime('%A')} {datetime.now().astimezone(pytz.timezone('America/New_York')).strftime('%-I:%M %p')} ET, *Nasdaq Composite</span></i><br><span style='font-size:9px'>Table: Phil Rosen, Opening Bell Daily • Source: Yahoo Finance</span>",
             showarrow=False,
             font=dict(color="gray", size=10),
             xref="paper",
