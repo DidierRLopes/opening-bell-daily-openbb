@@ -12,6 +12,6 @@ You may also run it locally with
 
 ```bash
 uvicorn main:app --port 8080
-````
+```
 
 and update the custom backend URL accordingly.

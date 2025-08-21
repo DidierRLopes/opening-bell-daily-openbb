@@ -22,7 +22,8 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 origins = [
     "https://pro.openbb.co",
     "https://pro.openbb.dev",
-    "https://excel.openbb.co"
+    "https://excel.openbb.co",
+    "http://localhost:1420",
 ]
 
 app.add_middleware(
@@ -48,11 +49,11 @@ def get_widgets():
     )
 
 
-@app.get("/templates.json")
-def get_templates():
-    """Templates configuration file for the OpenBB Custom Backend"""
+@app.get("/apps.json")
+def get_apps():
+    """Apps configuration file for the OpenBB Custom Backend"""
     return JSONResponse(
-        content=json.load((Path(__file__).parent.resolve() / "templates.json").open())
+        content=json.load((Path(__file__).parent.resolve() / "apps.json").open())
     )
 
 
@@ -62,7 +63,7 @@ def health_check():
 
 
 @app.get("/market_snapshot")
-def get_market_snapshot():
+def get_market_snapshot(raw: bool = False):
     """Get current market snapshot of major indices and assets"""
     
     try:
@@ -127,6 +128,9 @@ def get_market_snapshot():
                 content={"error": "No market data available"}, 
                 status_code=500
             )
+
+        if raw:
+            return results
 
         # Create dataframe from results
         df = pd.DataFrame(results)
