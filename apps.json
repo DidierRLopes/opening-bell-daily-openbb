@@ -1,24 +1,87 @@
-[
-  {
-    "name": "Opening Bell Daily",
-    "img": "https://github.com/user-attachments/assets/f86dd4eb-c70d-4d5c-be7b-9cff11c9e6b5",
-    "description": "This has widgets that are utilized by Phil Rosen when writing Opening Bell Daily (https://www.openingbelldailynews.com/)",
-    "allowCustomization": true,
-    "tabs": {
-      "": {
-        "id": "",
-        "name": "",
-        "layout": [
-          {
-            "i": "market-snapshot",
-            "x": 0,
-            "y": 0,
-            "w": 40,
-            "h": 14
-          }
-        ]
-      }
+{
+  "name": "Opening Bell Daily",
+  "img": "https://github.com/user-attachments/assets/f86dd4eb-c70d-4d5c-be7b-9cff11c9e6b5",
+  "img_dark": "https://github.com/user-attachments/assets/f86dd4eb-c70d-4d5c-be7b-9cff11c9e6b5",
+  "img_light": "https://github.com/user-attachments/assets/f86dd4eb-c70d-4d5c-be7b-9cff11c9e6b5",
+  "description": "This has widgets that are utilized by Phil Rosen when writing Opening Bell Daily (https://www.openingbelldailynews.com/)",
+  "allowCustomization": true,
+  "tabs": {
+    "overview": {
+      "id": "overview",
+      "name": "Overview",
+      "layout": [
+        {
+          "i": "market-snapshot",
+          "x": 0,
+          "y": 2,
+          "w": 40,
+          "h": 14,
+          "groups": []
+        },
+        {
+          "i": "market-chart",
+          "x": 0,
+          "y": 16,
+          "w": 40,
+          "h": 12,
+          "state": {
+            "params": {
+              "symbol": [
+                "^GSPC",
+                "GC=F",
+                "BTC-USD"
+              ],
+              "start_date": "2024-10-07",
+              "transform": "cumulative_return"
+            }
+          },
+          "groups": []
+        }
+      ]
     },
-    "groups": []
-  }
-]
+    "comparison": {
+      "id": "comparison",
+      "name": "Comparison",
+      "layout": [
+        {
+          "i": "yfinance-chart",
+          "x": 0,
+          "y": 2,
+          "w": 40,
+          "h": 12,
+          "state": {
+            "params": {
+              "symbols": "MSFT,TSLA,AAPL,AMZN,META,GOOG",
+              "start_date": "2024-10-07",
+              "transform": "cumulative_return"
+            }
+          },
+          "groups": []
+        }
+      ]
+    },
+    "macro": {
+      "id": "macro",
+      "name": "Macro",
+      "layout": [
+        {
+          "i": "fred-series",
+          "x": 0,
+          "y": 2,
+          "w": 40,
+          "h": 12,
+          "state": {
+            "params": {
+              "symbols": "UNRATE,FEDFUNDS,GDP",
+              "end_date": "2025-09-26",
+              "frequency": "m",
+              "transform": "pch"
+            }
+          },
+          "groups": []
+        }
+      ]
+    }
+  },
+  "groups": []
+}
