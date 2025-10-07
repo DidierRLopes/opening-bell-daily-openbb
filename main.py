@@ -676,8 +676,8 @@ def get_fred_series(
         # Update layout with theme - matching market_snapshot styling
         layout_config = {
             "margin": dict(l=20, r=20, t=10 if not chart_title else 50, b=80),  # Adjust top margin if title exists
-            "paper_bgcolor": '#F4FEFF',
-            "plot_bgcolor": '#F4FEFF',
+            "paper_bgcolor": 'white',
+            "plot_bgcolor": 'white',
             "dragmode": False,
             "font": dict(color=text_color),
             "xaxis": dict(
@@ -723,14 +723,14 @@ def get_fred_series(
                     source=img_src,
                     xref="paper",
                     yref="paper",
-                    x=0.5,
-                    y=0.5,
-                    sizex=0.4,  # 2x bigger (was 0.2)
-                    sizey=0.4,  # 2x bigger (was 0.2)
-                    xanchor="center", 
-                    yanchor="middle",
-                    layer="below",
-                    opacity=0.3,  # More visible (was 0.1)
+                    x=1.01,
+                    y=-0.35,
+                    sizex=0.30,
+                    sizey=0.27,
+                    xanchor="right", 
+                    yanchor="bottom",
+                    layer="above",
+                    opacity=1.0,
                 )
             )
         
@@ -921,8 +921,8 @@ def get_yfinance_chart(
         # Update layout with theme - matching FRED styling
         layout_config = {
             "margin": dict(l=20, r=20, t=10 if not chart_title else 50, b=80),
-            "paper_bgcolor": '#F4FEFF',
-            "plot_bgcolor": '#F4FEFF',
+            "paper_bgcolor": 'white',
+            "plot_bgcolor": 'white',
             "dragmode": False,
             "font": dict(color=text_color),
             "xaxis": dict(
@@ -968,14 +968,14 @@ def get_yfinance_chart(
                     source=img_src,
                     xref="paper",
                     yref="paper",
-                    x=0.5,
-                    y=0.5,
-                    sizex=0.4,
-                    sizey=0.4,
-                    xanchor="center", 
-                    yanchor="middle",
-                    layer="below",
-                    opacity=0.3,
+                    x=1.01,
+                    y=-0.35,
+                    sizex=0.30,
+                    sizey=0.27,
+                    xanchor="right", 
+                    yanchor="bottom",
+                    layer="above",
+                    opacity=1.0,
                 )
             )
         
