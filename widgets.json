@@ -1,28 +1,29 @@
 {
-    "market-snapshot": {
-      "name": "Market Snapshot",
-      "description": "Market Snapshot from Phil Rosen including DJIA, S&P 500, NASDSAQ, Russel 2K, Gold, Bitcoin, Brent Crude, and 10-year Treasury",
-      "category": "Macro",
-      "type": "chart",
-      "endpoint": "market_snapshot",
-      "gridData": {
-        "w": 40,
-        "h": 14
-      },
-      "raw": true
+  "market-snapshot": {
+    "name": "Market Snapshot",
+    "description": "Market Snapshot from Phil Rosen including DJIA, S&P 500, NASDSAQ, Russel 2K, Gold, Bitcoin, Brent Crude, and 10-year Treasury",
+    "category": "Macro",
+    "type": "chart",
+    "endpoint": "market_snapshot",
+    "gridData": {
+      "w": 40,
+      "h": 14
     },
-    "fred-series": {
-      "name": "FRED Economic Series",
-      "description": "Get economic data by series ID from FRED (Federal Reserve Economic Data). Supports multiple series and various economic indicators. Configure FRED API key via X-FRED-API-KEY header.",
-      "category": "Economy",
-      "subCategory": "Economic Data",
-      "type": "chart",
-      "endpoint": "fred_series",
-      "gridData": {
-        "w": 40,
-        "h": 12
-      },
-      "params": [
+    "raw": true
+  },
+  "fred-series": {
+    "name": "FRED Economic Series",
+    "description": "Get economic data by series ID from FRED (Federal Reserve Economic Data). Supports multiple series and various economic indicators. Configure FRED API key via X-FRED-API-KEY header.",
+    "category": "Economy",
+    "subCategory": "Economic Data",
+    "type": "chart",
+    "endpoint": "fred_series",
+    "gridData": {
+      "w": 40,
+      "h": 12
+    },
+    "params": [
+      [
         {
           "paramName": "symbols",
           "value": "PCENOW,RPI",
@@ -69,12 +70,30 @@
           "show": true,
           "description": "Data frequency conversion",
           "options": [
-            {"label": "Original (No Change)", "value": ""},
-            {"label": "Annual", "value": "a"},
-            {"label": "Quarterly", "value": "q"},
-            {"label": "Monthly", "value": "m"},
-            {"label": "Weekly", "value": "w"},
-            {"label": "Daily", "value": "d"}
+            {
+              "label": "Original (No Change)",
+              "value": ""
+            },
+            {
+              "label": "Annual",
+              "value": "a"
+            },
+            {
+              "label": "Quarterly",
+              "value": "q"
+            },
+            {
+              "label": "Monthly",
+              "value": "m"
+            },
+            {
+              "label": "Weekly",
+              "value": "w"
+            },
+            {
+              "label": "Daily",
+              "value": "d"
+            }
           ]
         },
         {
@@ -85,15 +104,42 @@
           "show": true,
           "description": "Data transformation method",
           "options": [
-            {"label": "None (Raw Data)", "value": ""},
-            {"label": "Change", "value": "chg"},
-            {"label": "Change from Year Ago", "value": "ch1"},
-            {"label": "Percent Change", "value": "pch"},
-            {"label": "Percent Change from Year Ago", "value": "pc1"},
-            {"label": "Compounded Annual Rate of Change", "value": "pca"},
-            {"label": "Continuously Compounded Rate of Change", "value": "cch"},
-            {"label": "Continuously Compounded Annual Rate of Change", "value": "cca"},
-            {"label": "Natural Log", "value": "log"}
+            {
+              "label": "None (Raw Data)",
+              "value": ""
+            },
+            {
+              "label": "Change",
+              "value": "chg"
+            },
+            {
+              "label": "Change from Year Ago",
+              "value": "ch1"
+            },
+            {
+              "label": "Percent Change",
+              "value": "pch"
+            },
+            {
+              "label": "Percent Change from Year Ago",
+              "value": "pc1"
+            },
+            {
+              "label": "Compounded Annual Rate of Change",
+              "value": "pca"
+            },
+            {
+              "label": "Continuously Compounded Rate of Change",
+              "value": "cch"
+            },
+            {
+              "label": "Continuously Compounded Annual Rate of Change",
+              "value": "cca"
+            },
+            {
+              "label": "Natural Log",
+              "value": "log"
+            }
           ]
         },
         {
@@ -104,14 +150,33 @@
           "show": true,
           "description": "Method for aggregating data when frequency is changed",
           "options": [
-            {"label": "End of Period", "value": "eop"},
-            {"label": "Average", "value": "avg"},
-            {"label": "Sum", "value": "sum"}
+            {
+              "label": "End of Period",
+              "value": "eop"
+            },
+            {
+              "label": "Average",
+              "value": "avg"
+            },
+            {
+              "label": "Sum",
+              "value": "sum"
+            }
           ]
+        },
+        {
+          "paramName": "chart_title",
+          "value": "",
+          "label": "Chart Title",
+          "type": "text",
+          "description": "Optional title for the chart. Leave empty for no title.",
+          "optional": true,
+          "show": true
         }
-      ],
-      "source": [
-        "FRED"
       ]
-    }
+    ],
+    "source": [
+      "FRED"
+    ]
+  }
 }

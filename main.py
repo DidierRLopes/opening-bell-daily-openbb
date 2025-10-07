@@ -516,7 +516,8 @@ def get_market_snapshot(raw: bool = False):
 @app.get("/fred_series")
 def get_fred_series(
     request: Request, 
-    symbols: str = "PCENOW,RPI", 
+    symbols: str = "PCENOW,RPI",
+    chart_title: str = "",
     start_date: str = None,
     end_date: str = None,
     limit: int = 100000,
@@ -528,16 +529,6 @@ def get_fred_series(
     """Get FRED series data with Plotly visualization"""
     
     try:
-        # Debug: Print received parameters
-        print(f"FRED Series Parameters:")
-        print(f"  symbols: {symbols}")
-        print(f"  start_date: {start_date}")
-        print(f"  end_date: {end_date}")
-        print(f"  limit: {limit}")
-        print(f"  frequency: {frequency}")
-        print(f"  transform: {transform}")
-        print(f"  aggregation_method: {aggregation_method}")
-        print(f"  theme: {theme}")
         
         # Split symbols string into list
         symbol_list = [s.strip() for s in symbols.split(',')]
@@ -683,30 +674,42 @@ def get_fred_series(
                 ))
         
         # Update layout with theme - matching market_snapshot styling
-        fig.update_layout(
-            title="",
-            margin=dict(l=20, r=20, t=10, b=80),  # Increased bottom margin for footnote
-            paper_bgcolor='#F4FEFF',
-            plot_bgcolor='#F4FEFF',
-            dragmode=False,
-            font=dict(color=text_color),
-            xaxis=dict(
+        layout_config = {
+            "margin": dict(l=20, r=20, t=10 if not chart_title else 50, b=80),  # Adjust top margin if title exists
+            "paper_bgcolor": '#F4FEFF',
+            "plot_bgcolor": '#F4FEFF',
+            "dragmode": False,
+            "font": dict(color=text_color),
+            "xaxis": dict(
                 gridcolor=grid_color,
                 tickfont=dict(color=text_color)
             ),
-            yaxis=dict(
+            "yaxis": dict(
                 gridcolor=grid_color,
                 tickfont=dict(color=text_color)
             ),
-            legend=dict(
+            "legend": dict(
                 orientation="h",
                 yanchor="bottom",
                 y=1.02,
-                xanchor="center",
-                x=0.5,
+                xanchor="right",
+                x=1.0,
                 font=dict(color=text_color)
             )
-        )
+        }
+        
+        # Add title if provided
+        if chart_title and chart_title.strip():
+            layout_config["title"] = dict(
+                text=chart_title,
+                x=0.02,  # Small left margin
+                xanchor="left",
+                font=dict(size=20, color=text_color)
+            )
+        else:
+            layout_config["title"] = ""
+            
+        fig.update_layout(**layout_config)
         
         # Add watermark logo in center of plot
         image_path = Path(__file__).parent.resolve() / "static" / "obd.png"
