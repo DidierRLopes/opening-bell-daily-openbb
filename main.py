@@ -774,12 +774,6 @@ def get_market_chart(
         symbol_list = [s.strip() for s in symbol.split(',')]
         
         # Debug: Print received parameters
-        print(f"YFinance Chart Parameters:")
-        print(f"  symbols: {symbol_list}")
-        print(f"  chart_title: {chart_title}")
-        print(f"  start_date: {start_date}")
-        print(f"  transform: {transform}")
-        print(f"  theme: {theme}")
         
         # Validate date ranges
         today = datetime.now().date()
@@ -827,36 +821,28 @@ def get_market_chart(
                 if start_date and str(start_date).strip() not in ["", "null", "none", "None"]:
                     yf_kwargs["start_date"] = start_date
                 
-                print(f"Attempting to fetch data for symbol: {sym}")
                 
                 # Get YFinance data using OpenBB
                 try:
                     result = obb.equity.price.historical(**yf_kwargs)
                     df = result.to_df()
-                    print(f"DataFrame shape for {sym}: {df.shape}")
                 except Exception as obb_error:
-                    print(f"OpenBB Exception for {sym}: {str(obb_error)}")
                     
                     # Try fallback approach
                     try:
-                        print(f"Trying fallback approach for {sym}")
                         fallback_kwargs = {"symbol": sym, "provider": "yfinance"}
                         result = obb.equity.price.historical(**fallback_kwargs)
                         df = result.to_df()
-                        print(f"Fallback successful for {sym}! DataFrame shape: {df.shape}")
                         
                         # Filter by start_date if provided
                         if start_date and str(start_date).strip() not in ["", "null", "none", "None"]:
                             df = df[df.index >= start_date]
-                            print(f"Filtered DataFrame shape for {sym}: {df.shape}")
                             
                     except Exception as fallback_error:
-                        print(f"Both attempts failed for {sym}: {str(fallback_error)}")
                         failed_symbols.append(sym)
                         continue
                 
                 if df.empty:
-                    print(f"Empty DataFrame for {sym}")
                     failed_symbols.append(sym)
                     continue
                 
@@ -868,11 +854,9 @@ def get_market_chart(
                         break
                 
                 if price_column is None:
-                    print(f"No suitable price column found for {sym}. Available columns: {df.columns.tolist()}")
                     failed_symbols.append(sym)
                     continue
                 
-                print(f"Using price column '{price_column}' for {sym}")
                 
                 # Apply transform if specified
                 if transform and transform.strip() and transform != "none":
@@ -899,7 +883,6 @@ def get_market_chart(
                 successful_symbols.append(sym)
                 
             except Exception as symbol_error:
-                print(f"Unexpected error processing {sym}: {str(symbol_error)}")
                 failed_symbols.append(sym)
                 continue
         
@@ -1128,7 +1111,6 @@ def get_yfinance_chart(
                 all_data.append(df)
                 
             except Exception as e:
-                print(f"Error processing symbol {symbol}: {str(e)}")
                 failed_symbols.append(symbol)
                 continue
         
