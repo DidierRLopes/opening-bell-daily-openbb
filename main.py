@@ -1,3 +1,7 @@
+import os
+# Fix for Yahoo Finance session issue
+os.environ['YFINANCE_BYPASS_CURL_ADAPTER'] = '1'
+
 import json
 from pathlib import Path
 import pandas as pd
@@ -78,8 +82,8 @@ def get_market_snapshot(raw: bool = False):
             "BTC-USD": "Bitcoin",
             "BZ=F": "Brent Crude",
             "^TNX": "10-year",
-            "MAGS": "Roundhill Magnificent Seven ETF",
-            "ACWI": "MSCI All Country World Index",
+            "MAGS": "Magnificent Seven ETF",
+            "ACWI": "MSCI World Index",
         }
 
         # Get current date and start of year date

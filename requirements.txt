@@ -1,8 +1,23 @@
-fastapi
-uvicorn
-pandas
-requests
-plotly
-openbb
-python-multipart
-fastapi-cors
+# Core web framework
+fastapi>=0.116.2
+uvicorn>=0.35.0
+
+# Data processing
+pandas>=2.3.3
+numpy>=2.3.3
+
+# Financial data
+openbb>=4.4.5
+openbb-yfinance>=1.4.7
+
+# Visualization
+plotly>=6.0.0
+
+# Date/time handling
+pytz>=2025.2
+
+# HTTP requests (for CORS, etc.)
+requests>=2.32.5
+
+# Environment configuration
+python-dotenv>=1.1.1
