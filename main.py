@@ -6,7 +6,7 @@ import json
 from pathlib import Path
 import pandas as pd
 import requests
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 import plotly.graph_objects as go
@@ -74,16 +74,16 @@ def get_market_snapshot(raw: bool = False):
         # Define the symbols we want to track
         symbols = {
             "^DJI": "DJIA",
-            "^GSPC": "S&P 500",
+            "^GSPC": "S&P 500", 
             "^IXIC": "NASDAQ*",
             "^RUT": "Russell 2K",
+            "MAGS": "Magnificent 7 ETF**",
+            "ACWI": "MSCI All World",
+            "BTC-USD": "Bitcoin",
             "GC=F": "Gold",
             "SLV": "Silver",
-            "BTC-USD": "Bitcoin",
             "BZ=F": "Brent Crude",
-            "^TNX": "10-year",
-            "MAGS": "Magnificent Seven ETF",
-            "ACWI": "MSCI World Index",
+            "^TNX": "10-Year",
         }
 
         # Get current date and start of year date
@@ -406,16 +406,22 @@ def get_market_snapshot(raw: bool = False):
                     yanchor="middle"
                 )
             
-            # Add value text with special formatting - ensure Bitcoin is handled correctly
+            # Add value text with special formatting
             value_text = ""
             if row['Index'] == "Gold":
                 value_text = f"${row['Value']:,} per ounce"
+            elif row['Index'] == "Silver":
+                value_text = f"${row['Value']:,} per ounce"
             elif row['Index'] == "Bitcoin":
-                value_text = f"${row['Value']:,}"  # Make sure Bitcoin is formatted correctly
+                value_text = f"${row['Value']:,}"
             elif row['Index'] == "Brent Crude":
                 value_text = f"${row['Value']:,} a barrel"
-            elif row['Index'] == "10-year":
-                value_text = f"{row['Value']}%"
+            elif row['Index'] == "10-Year":
+                value_text = f"{row['Value']:.2f}%"
+            elif row['Index'] == "Magnificent 7 ETF**":
+                value_text = f"${row['Value']:,}"
+            elif row['Index'] == "MSCI All World":
+                value_text = f"${row['Value']:,}"
             else:
                 value_text = f"{row['Value']:,}" if row['Value'] >= 1000 else str(row['Value'])
             
@@ -458,7 +464,7 @@ def get_market_snapshot(raw: bool = False):
         fig.add_annotation(
             x=0,
             y=-0.01,
-            text=f"<i><span style='font-size:12px'>Market data as of {datetime.now().astimezone(pytz.timezone('America/New_York')).strftime('%A')} {datetime.now().astimezone(pytz.timezone('America/New_York')).strftime('%-I:%M %p')} ET, *Nasdaq Composite</span></i><br><span style='font-size:9px'>Table: Phil Rosen, Opening Bell Daily • Source: Yahoo Finance</span>",
+            text=f"<i><span style='font-size:12px'>Market data as of {datetime.now().astimezone(pytz.timezone('America/New_York')).strftime('%A')} {datetime.now().astimezone(pytz.timezone('America/New_York')).strftime('%-I:%M %p')} ET, *Nasdaq Composite, **Roundhill MAGS ETF</span></i><br><span style='font-size:9px'>Table: Phil Rosen, Opening Bell Daily • Source: Yahoo Finance</span>",
             showarrow=False,
             font=dict(color="gray", size=10),
             xref="paper",
@@ -501,6 +507,248 @@ def get_market_snapshot(raw: bool = False):
     
     except Exception as e:
         print(f"Market snapshot error: {str(e)}")
+        return JSONResponse(
+            content={"error": str(e)}, 
+            status_code=500
+        )
+
+
+@app.get("/fred_series")
+def get_fred_series(
+    request: Request, 
+    symbols: str = "PCENOW,RPI", 
+    start_date: str = None,
+    end_date: str = None,
+    limit: int = 100000,
+    frequency: str = None,
+    transform: str = None,
+    aggregation_method: str = "eop",
+    theme: str = "dark"
+):
+    """Get FRED series data with Plotly visualization"""
+    
+    try:
+        # Debug: Print received parameters
+        print(f"FRED Series Parameters:")
+        print(f"  symbols: {symbols}")
+        print(f"  start_date: {start_date}")
+        print(f"  end_date: {end_date}")
+        print(f"  limit: {limit}")
+        print(f"  frequency: {frequency}")
+        print(f"  transform: {transform}")
+        print(f"  aggregation_method: {aggregation_method}")
+        print(f"  theme: {theme}")
+        
+        # Split symbols string into list
+        symbol_list = [s.strip() for s in symbols.split(',')]
+        
+        # Validate date ranges
+        today = datetime.now().date()
+        
+        if start_date and str(start_date).strip() not in ["", "null", "none", "None"]:
+            try:
+                start_dt = datetime.strptime(start_date, "%Y-%m-%d").date()
+                if start_dt > today:
+                    return JSONResponse(
+                        content={"error": f"Start date ({start_date}) cannot be in the future. Today is {today}"}, 
+                        status_code=400
+                    )
+            except ValueError:
+                return JSONResponse(
+                    content={"error": f"Invalid start date format: {start_date}. Use YYYY-MM-DD"}, 
+                    status_code=400
+                )
+                
+        if end_date and str(end_date).strip() not in ["", "null", "none", "None"]:
+            try:
+                end_dt = datetime.strptime(end_date, "%Y-%m-%d").date()
+                if end_dt > today:
+                    return JSONResponse(
+                        content={"error": f"End date ({end_date}) cannot be in the future. Today is {today}"}, 
+                        status_code=400
+                    )
+            except ValueError:
+                return JSONResponse(
+                    content={"error": f"Invalid end date format: {end_date}. Use YYYY-MM-DD"}, 
+                    status_code=400
+                )
+        
+        # Get FRED API key from custom header
+        fred_api_key = request.headers.get("X-FRED-API-KEY")
+        
+        # Prepare kwargs for OpenBB call
+        fred_kwargs = {
+            "symbol": symbol_list,
+            "provider": "fred"
+        }
+        
+        # Add parameters with proper validation
+        if limit and limit > 0:
+            fred_kwargs["limit"] = limit
+            
+        if aggregation_method and aggregation_method != "":
+            fred_kwargs["aggregation_method"] = aggregation_method
+            
+        # Handle date parameters - they can be None, empty string, or actual dates
+        if start_date and str(start_date).strip() not in ["", "null", "none", "None"]:
+            fred_kwargs["start_date"] = start_date
+            
+        if end_date and str(end_date).strip() not in ["", "null", "none", "None"]:
+            fred_kwargs["end_date"] = end_date
+            
+        if frequency and frequency != "" and frequency != "null":
+            fred_kwargs["frequency"] = frequency
+            
+        if transform and transform != "" and transform != "null":
+            fred_kwargs["transform"] = transform
+            
+        if fred_api_key:
+            fred_kwargs["api_key"] = fred_api_key
+        
+        # Debug: Print final kwargs
+        print(f"OpenBB kwargs: {fred_kwargs}")
+        
+        # Get FRED series data using OpenBB with better error handling
+        try:
+            result = obb.economy.fred_series(**fred_kwargs)
+            df = result.to_df()
+        except Exception as obb_error:
+            error_msg = str(obb_error)
+            print(f"OpenBB Exception caught: {error_msg}")
+            
+            if "Results not found" in error_msg or "No data" in error_msg:
+                return JSONResponse(
+                    content={
+                        "error": f"No data found for symbols {', '.join(symbol_list)} with the specified parameters.",
+                        "suggestions": [
+                            "Try using a longer date range (e.g., 1-2 years)",
+                            "Remove frequency conversion (annual data may not be available for short periods)", 
+                            "Try different transform options or use raw data",
+                            "Check if the FRED series symbols are correct (PCENOW, RPI)",
+                            "Some series may not have daily/recent data"
+                        ],
+                        "parameters_used": {
+                            "symbols": symbol_list,
+                            "start_date": start_date,
+                            "end_date": end_date,
+                            "frequency": frequency,
+                            "transform": transform,
+                            "aggregation_method": aggregation_method
+                        }
+                    }, 
+                    status_code=404
+                )
+            else:
+                return JSONResponse(
+                    content={"error": f"FRED API error: {error_msg}"}, 
+                    status_code=500
+                )
+        
+        if df.empty:
+            return JSONResponse(
+                content={
+                    "error": f"No data returned for symbols {', '.join(symbol_list)}. The series may not exist or may not have data for the specified date range.",
+                    "suggestion": "Try using default date range (2 years back) or check if the FRED series symbols are correct."
+                }, 
+                status_code=404
+            )
+        
+        # Create Plotly figure
+        fig = go.Figure()
+        
+        # Define theme colors
+        if theme == "dark":
+            bg_color = "#151518"
+            text_color = "#FFFFFF"
+            grid_color = "rgba(51, 51, 51, 0.3)"
+            colors = ["#FF8000", "#2D9BF0", "#00AA44", "#FF4444", "#AA44FF"]
+        else:
+            bg_color = "#FFFFFF"
+            text_color = "#333333"
+            grid_color = "rgba(221, 221, 221, 0.3)"
+            colors = ["#2E5090", "#00AA44", "#FF6B35", "#8A2BE2", "#DC143C"]
+        
+        # Add traces for each symbol
+        for i, symbol in enumerate(symbol_list):
+            if symbol in df.columns:
+                fig.add_trace(go.Scatter(
+                    x=df.index,
+                    y=df[symbol],
+                    mode='lines',
+                    name=symbol,
+                    line=dict(
+                        width=2,
+                        color=colors[i % len(colors)]
+                    )
+                ))
+        
+        # Update layout with theme - matching market_snapshot styling
+        fig.update_layout(
+            title="",
+            margin=dict(l=20, r=20, t=10, b=80),  # Increased bottom margin for footnote
+            paper_bgcolor='#F4FEFF',
+            plot_bgcolor='#F4FEFF',
+            dragmode=False,
+            font=dict(color=text_color),
+            xaxis=dict(
+                gridcolor=grid_color,
+                tickfont=dict(color=text_color)
+            ),
+            yaxis=dict(
+                gridcolor=grid_color,
+                tickfont=dict(color=text_color)
+            ),
+            legend=dict(
+                orientation="h",
+                yanchor="bottom",
+                y=1.02,
+                xanchor="center",
+                x=0.5,
+                font=dict(color=text_color)
+            )
+        )
+        
+        # Add watermark logo in center of plot
+        image_path = Path(__file__).parent.resolve() / "static" / "obd.png"
+        if image_path.exists():
+            with open(image_path, "rb") as img_file:
+                encoded_image = base64.b64encode(img_file.read()).decode('utf-8')
+                img_src = f"data:image/png;base64,{encoded_image}"
+            
+            fig.add_layout_image(
+                dict(
+                    source=img_src,
+                    xref="paper",
+                    yref="paper",
+                    x=0.5,
+                    y=0.5,
+                    sizex=0.4,  # 2x bigger (was 0.2)
+                    sizey=0.4,  # 2x bigger (was 0.2)
+                    xanchor="center", 
+                    yanchor="middle",
+                    layer="below",
+                    opacity=0.3,  # More visible (was 0.1)
+                )
+            )
+        
+        # Add data source annotation below x-axis
+        fig.add_annotation(
+            x=0,
+            y=-0.15,  # Position below x-axis
+            text=f"<i><span style='font-size:12px'>FRED Economic Data: {', '.join(symbol_list)}</span></i><br><span style='font-size:9px'>Chart: Opening Bell Daily • Source: Federal Reserve Economic Data (FRED)</span>",
+            showarrow=False,
+            font=dict(color="gray", size=10),
+            xref="paper",
+            yref="paper",
+            xanchor="left",
+            yanchor="top",
+            align="left"
+        )
+        
+        return json.loads(fig.to_json())
+    
+    except Exception as e:
+        print(f"FRED series error: {str(e)}")
         return JSONResponse(
             content={"error": str(e)}, 
             status_code=500

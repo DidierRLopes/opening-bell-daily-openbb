@@ -10,5 +10,108 @@
         "h": 14
       },
       "raw": true
+    },
+    "fred-series": {
+      "name": "FRED Economic Series",
+      "description": "Get economic data by series ID from FRED (Federal Reserve Economic Data). Supports multiple series and various economic indicators. Configure FRED API key via X-FRED-API-KEY header.",
+      "category": "Economy",
+      "subCategory": "Economic Data",
+      "type": "chart",
+      "endpoint": "fred_series",
+      "gridData": {
+        "w": 40,
+        "h": 12
+      },
+      "params": [
+        {
+          "paramName": "symbols",
+          "value": "PCENOW,RPI",
+          "label": "FRED Series Symbols",
+          "type": "text",
+          "description": "FRED series identifier(s). Multiple comma separated items allowed.",
+          "optional": false,
+          "show": true,
+          "multiSelect": true,
+          "multiple": true,
+          "style": {
+            "popupWidth": 450
+          }
+        },
+        {
+          "type": "date",
+          "paramName": "start_date",
+          "value": "$currentDate-2y",
+          "label": "Start Date",
+          "show": true,
+          "description": "Start date for the data in YYYY-MM-DD format"
+        },
+        {
+          "type": "date",
+          "paramName": "end_date",
+          "value": null,
+          "label": "End Date",
+          "show": true,
+          "description": "End date for the data in YYYY-MM-DD format (leave empty for latest available)"
+        },
+        {
+          "type": "number",
+          "paramName": "limit",
+          "value": 100000,
+          "label": "Data Limit",
+          "show": false,
+          "description": "Maximum number of data points to return"
+        },
+        {
+          "type": "text",
+          "paramName": "frequency",
+          "value": "",
+          "label": "Frequency",
+          "show": true,
+          "description": "Data frequency conversion",
+          "options": [
+            {"label": "Original (No Change)", "value": ""},
+            {"label": "Annual", "value": "a"},
+            {"label": "Quarterly", "value": "q"},
+            {"label": "Monthly", "value": "m"},
+            {"label": "Weekly", "value": "w"},
+            {"label": "Daily", "value": "d"}
+          ]
+        },
+        {
+          "type": "text",
+          "paramName": "transform",
+          "value": "",
+          "label": "Transform",
+          "show": true,
+          "description": "Data transformation method",
+          "options": [
+            {"label": "None (Raw Data)", "value": ""},
+            {"label": "Change", "value": "chg"},
+            {"label": "Change from Year Ago", "value": "ch1"},
+            {"label": "Percent Change", "value": "pch"},
+            {"label": "Percent Change from Year Ago", "value": "pc1"},
+            {"label": "Compounded Annual Rate of Change", "value": "pca"},
+            {"label": "Continuously Compounded Rate of Change", "value": "cch"},
+            {"label": "Continuously Compounded Annual Rate of Change", "value": "cca"},
+            {"label": "Natural Log", "value": "log"}
+          ]
+        },
+        {
+          "type": "text",
+          "paramName": "aggregation_method",
+          "value": "eop",
+          "label": "Aggregation Method",
+          "show": true,
+          "description": "Method for aggregating data when frequency is changed",
+          "options": [
+            {"label": "End of Period", "value": "eop"},
+            {"label": "Average", "value": "avg"},
+            {"label": "Sum", "value": "sum"}
+          ]
+        }
+      ],
+      "source": [
+        "FRED"
+      ]
     }
 }
