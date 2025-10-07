@@ -756,3 +756,256 @@ def get_fred_series(
             content={"error": str(e)}, 
             status_code=500
         )
+
+
+@app.get("/yfinance_chart")
+def get_yfinance_chart(
+    request: Request,
+    symbol: str = "^GSPC",
+    chart_title: str = "",
+    start_date: str = None,
+    transform: str = "",
+    theme: str = "dark"
+):
+    """Get YFinance chart data with Plotly visualization"""
+    
+    try:
+        # Split symbols string into list for multi-selection support
+        symbol_list = [s.strip() for s in symbol.split(',')]
+        
+        # Debug: Print received parameters
+        print(f"YFinance Chart Parameters:")
+        print(f"  symbols: {symbol_list}")
+        print(f"  chart_title: {chart_title}")
+        print(f"  start_date: {start_date}")
+        print(f"  transform: {transform}")
+        print(f"  theme: {theme}")
+        
+        # Validate date ranges
+        today = datetime.now().date()
+        
+        if start_date and str(start_date).strip() not in ["", "null", "none", "None"]:
+            try:
+                start_dt = datetime.strptime(start_date, "%Y-%m-%d").date()
+                if start_dt > today:
+                    return JSONResponse(
+                        content={"error": f"Start date ({start_date}) cannot be in the future. Today is {today}"}, 
+                        status_code=400
+                    )
+            except ValueError:
+                return JSONResponse(
+                    content={"error": f"Invalid start date format: {start_date}. Use YYYY-MM-DD"}, 
+                    status_code=400
+                )
+        
+        # Create Plotly figure
+        fig = go.Figure()
+        
+        # Define theme colors
+        if theme == "dark":
+            text_color = "#FFFFFF"
+            grid_color = "rgba(51, 51, 51, 0.3)"
+            colors = ["#FF8000", "#2D9BF0", "#00AA44", "#FF4444", "#AA44FF", "#FF8844", "#44FF88"]
+        else:
+            text_color = "#333333"
+            grid_color = "rgba(221, 221, 221, 0.3)"
+            colors = ["#2E5090", "#00AA44", "#FF6B35", "#8A2BE2", "#DC143C", "#228B22", "#FF1493"]
+        
+        successful_symbols = []
+        failed_symbols = []
+        
+        # Process each symbol
+        for i, sym in enumerate(symbol_list):
+            try:
+                # Prepare kwargs for OpenBB call
+                yf_kwargs = {
+                    "symbol": sym,
+                    "provider": "yfinance"
+                }
+                
+                # Add start date if provided
+                if start_date and str(start_date).strip() not in ["", "null", "none", "None"]:
+                    yf_kwargs["start_date"] = start_date
+                
+                print(f"Attempting to fetch data for symbol: {sym}")
+                
+                # Get YFinance data using OpenBB
+                try:
+                    result = obb.equity.price.historical(**yf_kwargs)
+                    df = result.to_df()
+                    print(f"DataFrame shape for {sym}: {df.shape}")
+                except Exception as obb_error:
+                    print(f"OpenBB Exception for {sym}: {str(obb_error)}")
+                    
+                    # Try fallback approach
+                    try:
+                        print(f"Trying fallback approach for {sym}")
+                        fallback_kwargs = {"symbol": sym, "provider": "yfinance"}
+                        result = obb.equity.price.historical(**fallback_kwargs)
+                        df = result.to_df()
+                        print(f"Fallback successful for {sym}! DataFrame shape: {df.shape}")
+                        
+                        # Filter by start_date if provided
+                        if start_date and str(start_date).strip() not in ["", "null", "none", "None"]:
+                            df = df[df.index >= start_date]
+                            print(f"Filtered DataFrame shape for {sym}: {df.shape}")
+                            
+                    except Exception as fallback_error:
+                        print(f"Both attempts failed for {sym}: {str(fallback_error)}")
+                        failed_symbols.append(sym)
+                        continue
+                
+                if df.empty:
+                    print(f"Empty DataFrame for {sym}")
+                    failed_symbols.append(sym)
+                    continue
+                
+                # Determine which price column to use
+                price_column = None
+                for col in ['close', 'Close', 'adj_close', 'Adj Close']:
+                    if col in df.columns:
+                        price_column = col
+                        break
+                
+                if price_column is None:
+                    print(f"No suitable price column found for {sym}. Available columns: {df.columns.tolist()}")
+                    failed_symbols.append(sym)
+                    continue
+                
+                print(f"Using price column '{price_column}' for {sym}")
+                
+                # Apply transform if specified
+                if transform and transform.strip() and transform != "none":
+                    if transform == "pct_change":
+                        df[price_column] = df[price_column].pct_change() * 100
+                    elif transform == "cumulative_return":
+                        df[price_column] = ((df[price_column] / df[price_column].iloc[0]) - 1) * 100
+                    elif transform == "log_return":
+                        import numpy as np
+                        df[price_column] = np.log(df[price_column] / df[price_column].shift(1)) * 100
+                
+                # Add price line trace for this symbol
+                fig.add_trace(go.Scatter(
+                    x=df.index,
+                    y=df[price_column],
+                    mode='lines',
+                    name=sym,
+                    line=dict(
+                        width=2,
+                        color=colors[i % len(colors)]
+                    )
+                ))
+                
+                successful_symbols.append(sym)
+                
+            except Exception as symbol_error:
+                print(f"Unexpected error processing {sym}: {str(symbol_error)}")
+                failed_symbols.append(sym)
+                continue
+        
+        # Check if any symbols were successful
+        if not successful_symbols:
+            return JSONResponse(
+                content={
+                    "error": f"No data found for any of the symbols: {', '.join(symbol_list)}.",
+                    "failed_symbols": failed_symbols,
+                    "suggestions": [
+                        "Check if the symbols are correct",
+                        "Try a different date range",
+                        "Some symbols may not have historical data available"
+                    ]
+                }, 
+                status_code=404
+            )
+        
+        # Update layout with theme - matching FRED styling
+        layout_config = {
+            "margin": dict(l=20, r=20, t=10 if not chart_title else 50, b=80),
+            "paper_bgcolor": '#F4FEFF',
+            "plot_bgcolor": '#F4FEFF',
+            "dragmode": False,
+            "font": dict(color=text_color),
+            "xaxis": dict(
+                gridcolor=grid_color,
+                tickfont=dict(color=text_color)
+            ),
+            "yaxis": dict(
+                gridcolor=grid_color,
+                tickfont=dict(color=text_color)
+            ),
+            "legend": dict(
+                orientation="h",
+                yanchor="bottom",
+                y=1.02,
+                xanchor="right",
+                x=1.0,
+                font=dict(color=text_color)
+            )
+        }
+        
+        # Add title if provided
+        if chart_title and chart_title.strip():
+            layout_config["title"] = dict(
+                text=chart_title,
+                x=0.02,
+                xanchor="left",
+                font=dict(size=20, color=text_color)
+            )
+        else:
+            layout_config["title"] = ""
+            
+        fig.update_layout(**layout_config)
+        
+        # Add watermark logo in center of plot
+        image_path = Path(__file__).parent.resolve() / "static" / "obd.png"
+        if image_path.exists():
+            with open(image_path, "rb") as img_file:
+                encoded_image = base64.b64encode(img_file.read()).decode('utf-8')
+                img_src = f"data:image/png;base64,{encoded_image}"
+            
+            fig.add_layout_image(
+                dict(
+                    source=img_src,
+                    xref="paper",
+                    yref="paper",
+                    x=0.5,
+                    y=0.5,
+                    sizex=0.4,
+                    sizey=0.4,
+                    xanchor="center", 
+                    yanchor="middle",
+                    layer="below",
+                    opacity=0.3,
+                )
+            )
+        
+        # Add data source annotation below x-axis
+        transform_text = f" ({transform})" if transform and transform != "none" else ""
+        symbols_text = ', '.join(successful_symbols)
+        
+        # Add warning about failed symbols if any
+        warning_text = ""
+        if failed_symbols:
+            warning_text = f"<br><span style='color:orange;font-size:8px'>⚠ Failed to load: {', '.join(failed_symbols)}</span>"
+        
+        fig.add_annotation(
+            x=0,
+            y=-0.15,
+            text=f"<i><span style='font-size:12px'>Financial Data: {symbols_text}{transform_text}</span></i><br><span style='font-size:9px'>Chart: Opening Bell Daily • Source: Yahoo Finance</span>{warning_text}",
+            showarrow=False,
+            font=dict(color="gray", size=10),
+            xref="paper",
+            yref="paper",
+            xanchor="left",
+            yanchor="top",
+            align="left"
+        )
+        
+        return json.loads(fig.to_json())
+    
+    except Exception as e:
+        print(f"YFinance chart error: {str(e)}")
+        return JSONResponse(
+            content={"error": str(e)}, 
+            status_code=500
+        )

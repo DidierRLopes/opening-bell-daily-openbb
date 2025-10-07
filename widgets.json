@@ -178,5 +178,121 @@
     "source": [
       "FRED"
     ]
+  },
+  "yfinance-chart": {
+    "name": "YFinance Chart",
+    "description": "Interactive financial chart using Yahoo Finance data. Supports major indices, ETFs, cryptocurrencies, and commodities with various transformations.",
+    "category": "Equity",
+    "subCategory": "Price Charts",
+    "type": "chart",
+    "endpoint": "yfinance_chart",
+    "gridData": {
+      "w": 40,
+      "h": 12
+    },
+    "params": [
+      {
+        "paramName": "symbol",
+        "value": "^GSPC",
+        "label": "Symbol",
+        "type": "text",
+        "description": "Financial symbol to chart",
+        "multiSelect": true,
+        "optional": false,
+        "show": true,
+        "options": [
+          {
+            "label": "S&P 500",
+            "value": "^GSPC"
+          },
+          {
+            "label": "DJIA",
+            "value": "^DJI"
+          },
+          {
+            "label": "NASDAQ Composite",
+            "value": "^IXIC"
+          },
+          {
+            "label": "Russell 2000",
+            "value": "^RUT"
+          },
+          {
+            "label": "Magnificent 7 ETF",
+            "value": "MAGS"
+          },
+          {
+            "label": "MSCI All World",
+            "value": "ACWI"
+          },
+          {
+            "label": "Bitcoin",
+            "value": "BTC-USD"
+          },
+          {
+            "label": "Gold",
+            "value": "GC=F"
+          },
+          {
+            "label": "Silver",
+            "value": "SLV"
+          },
+          {
+            "label": "Brent Crude",
+            "value": "BZ=F"
+          },
+          {
+            "label": "10-Year Treasury",
+            "value": "^TNX"
+          }
+        ]
+      },
+      {
+        "paramName": "chart_title",
+        "value": "",
+        "label": "Chart Title",
+        "type": "text",
+        "description": "Optional title for the chart. Leave empty for no title.",
+        "optional": true,
+        "show": true
+      },
+      {
+        "type": "date",
+        "paramName": "start_date",
+        "value": "$currentDate-1y",
+        "label": "Start Date",
+        "show": true,
+        "description": "Start date for the data in YYYY-MM-DD format"
+      },
+      {
+        "type": "text",
+        "paramName": "transform",
+        "value": "",
+        "label": "Transform",
+        "show": true,
+        "description": "Data transformation method",
+        "options": [
+          {
+            "label": "None (Price)",
+            "value": ""
+          },
+          {
+            "label": "Percent Change",
+            "value": "pct_change"
+          },
+          {
+            "label": "Cumulative Return",
+            "value": "cumulative_return"
+          },
+          {
+            "label": "Log Return",
+            "value": "log_return"
+          }
+        ]
+      }
+    ],
+    "source": [
+      "Yahoo Finance"
+    ]
   }
 }
