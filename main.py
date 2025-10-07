@@ -758,8 +758,8 @@ def get_fred_series(
         )
 
 
-@app.get("/yfinance_chart")
-def get_yfinance_chart(
+@app.get("/market_chart")
+def get_market_chart(
     request: Request,
     symbol: str = "^GSPC",
     chart_title: str = "",
@@ -1001,6 +1001,283 @@ def get_yfinance_chart(
             align="left"
         )
         
+        return json.loads(fig.to_json())
+    
+    except Exception as e:
+        print(f"Market chart error: {str(e)}")
+        return JSONResponse(
+            content={"error": str(e)}, 
+            status_code=500
+        )
+
+
+@app.get("/yfinance_chart")
+def get_yfinance_chart(
+    request: Request,
+    symbols: str = "^GSPC",
+    chart_title: str = "",
+    start_date: str = None,
+    transform: str = ""
+):
+    try:
+        # Get theme from request headers
+        theme = request.headers.get("theme", "dark")
+        
+        # Validate start_date
+        if start_date:
+            if start_date.startswith("$currentDate"):
+                # Handle OpenBB date modifiers like "$currentDate-1y"
+                try:
+                    modifier = start_date.replace("$currentDate", "").strip()
+                    if modifier.startswith("-"):
+                        # Parse modifier like "-1y", "-2m", "-30d"
+                        amount = int(modifier[1:-1])
+                        unit = modifier[-1].lower()
+                        
+                        from datetime import datetime, timedelta
+                        import dateutil.relativedelta
+                        
+                        current_date = datetime.now()
+                        if unit == 'y':
+                            start_date = (current_date - dateutil.relativedelta.relativedelta(years=amount)).strftime('%Y-%m-%d')
+                        elif unit == 'm':
+                            start_date = (current_date - dateutil.relativedelta.relativedelta(months=amount)).strftime('%Y-%m-%d')
+                        elif unit == 'd':
+                            start_date = (current_date - timedelta(days=amount)).strftime('%Y-%m-%d')
+                        else:
+                            start_date = (current_date - dateutil.relativedelta.relativedelta(years=1)).strftime('%Y-%m-%d')
+                    else:
+                        start_date = datetime.now().strftime('%Y-%m-%d')
+                except:
+                    start_date = (datetime.now() - dateutil.relativedelta.relativedelta(years=1)).strftime('%Y-%m-%d')
+            else:
+                # Validate date format
+                try:
+                    from datetime import datetime
+                    datetime.strptime(start_date, '%Y-%m-%d')
+                    # Check if date is not in the future
+                    if datetime.strptime(start_date, '%Y-%m-%d') > datetime.now():
+                        start_date = datetime.now().strftime('%Y-%m-%d')
+                except ValueError:
+                    start_date = None
+        
+        if not start_date:
+            from datetime import datetime
+            import dateutil.relativedelta
+            start_date = (datetime.now() - dateutil.relativedelta.relativedelta(years=1)).strftime('%Y-%m-%d')
+        
+        # Parse symbols - handle comma-separated input
+        symbol_list = [s.strip().upper() for s in symbols.split(',') if s.strip()]
+        if not symbol_list:
+            symbol_list = ['^GSPC']  # Default fallback
+        
+        all_data = []
+        failed_symbols = []
+        
+        # Process each symbol
+        for symbol in symbol_list:
+            try:
+                # Get historical data using OpenBB
+                data = obb.equity.price.historical(
+                    symbol=symbol,
+                    start_date=start_date,
+                    provider="yfinance"
+                )
+                
+                if data is None or len(data.results) == 0:
+                    failed_symbols.append(symbol)
+                    continue
+                
+                # Convert to DataFrame
+                df = data.to_df()
+                
+                if df is None or df.empty:
+                    failed_symbols.append(symbol)
+                    continue
+                
+                # Find the price column - check for different possible column names
+                price_column = None
+                possible_columns = ['close', 'Close', 'adj_close', 'Adj Close', 'price', 'Price']
+                for col in possible_columns:
+                    if col in df.columns:
+                        price_column = col
+                        break
+                
+                if price_column is None:
+                    # If no standard price column found, use the last numeric column
+                    numeric_cols = df.select_dtypes(include=['float64', 'int64']).columns
+                    if len(numeric_cols) > 0:
+                        price_column = numeric_cols[-1]
+                    else:
+                        failed_symbols.append(symbol)
+                        continue
+                
+                # Apply transformations
+                if transform == "pct_change":
+                    df[price_column] = df[price_column].pct_change() * 100
+                    df = df.dropna()
+                elif transform == "cumulative_return":
+                    df[price_column] = (df[price_column] / df[price_column].iloc[0] - 1) * 100
+                elif transform == "log_return":
+                    import numpy as np
+                    df[price_column] = np.log(df[price_column] / df[price_column].shift(1)) * 100
+                    df = df.dropna()
+                
+                # Add symbol identifier and store data
+                df['symbol'] = symbol
+                all_data.append(df)
+                
+            except Exception as e:
+                print(f"Error processing symbol {symbol}: {str(e)}")
+                failed_symbols.append(symbol)
+                continue
+        
+        if not all_data:
+            return JSONResponse(
+                content={"error": f"No valid data found for any symbols: {', '.join(symbol_list)}"}, 
+                status_code=404
+            )
+        
+        # Create Plotly chart
+        import plotly.graph_objects as go
+        from plotly.subplots import make_subplots
+        import plotly.io as pio
+        
+        fig = go.Figure()
+        
+        # Add traces for each symbol
+        for df in all_data:
+            symbol = df['symbol'].iloc[0]
+            
+            # Find the price column again for this dataframe
+            price_column = None
+            possible_columns = ['close', 'Close', 'adj_close', 'Adj Close', 'price', 'Price']
+            for col in possible_columns:
+                if col in df.columns and col != 'symbol':
+                    price_column = col
+                    break
+            
+            if price_column is None:
+                numeric_cols = df.select_dtypes(include=['float64', 'int64']).columns
+                numeric_cols = [col for col in numeric_cols if col != 'symbol']
+                if len(numeric_cols) > 0:
+                    price_column = numeric_cols[-1]
+                else:
+                    continue
+            
+            fig.add_trace(go.Scatter(
+                x=df.index,
+                y=df[price_column],
+                mode='lines',
+                name=symbol,
+                line=dict(width=2)
+            ))
+        
+        # Determine y-axis title based on transform
+        if transform == "pct_change":
+            y_title = "Percent Change (%)"
+        elif transform == "cumulative_return":
+            y_title = "Cumulative Return (%)"
+        elif transform == "log_return":
+            y_title = "Log Return (%)"
+        else:
+            y_title = "Price"
+        
+        # Configure layout based on theme (matching market chart exactly)
+        if theme == "light":
+            text_color = "black"
+            grid_color = "#E5E5E5"
+        else:
+            text_color = "black"  # Use black text on white background
+            grid_color = "#E5E5E5"
+        
+        # Update layout with theme - matching market chart styling exactly
+        layout_config = {
+            "margin": dict(l=20, r=20, t=10 if not chart_title else 50, b=80),  # Match market chart
+            "paper_bgcolor": 'white',
+            "plot_bgcolor": 'white',
+            "dragmode": False,
+            "font": dict(color=text_color),
+            "xaxis": dict(
+                gridcolor=grid_color,
+                tickfont=dict(color=text_color)
+            ),
+            "yaxis": dict(
+                gridcolor=grid_color,
+                tickfont=dict(color=text_color)
+            ),
+            "legend": dict(
+                orientation="h",
+                yanchor="bottom",
+                y=1.02,
+                xanchor="right",
+                x=1.0,
+                font=dict(color=text_color)
+            )
+        }
+        
+        # Add title if provided
+        if chart_title and chart_title.strip():
+            layout_config["title"] = dict(
+                text=chart_title,
+                x=0.02,
+                xanchor="left",
+                font=dict(size=20, color=text_color)
+            )
+        else:
+            layout_config["title"] = ""
+            
+        fig.update_layout(**layout_config)
+        
+        # Add watermark logo in same position as market chart
+        from pathlib import Path
+        import base64
+        image_path = Path(__file__).parent.resolve() / "static" / "obd.png"
+        if image_path.exists():
+            with open(image_path, "rb") as img_file:
+                encoded_image = base64.b64encode(img_file.read()).decode('utf-8')
+                img_src = f"data:image/png;base64,{encoded_image}"
+            
+            fig.add_layout_image(
+                dict(
+                    source=img_src,
+                    xref="paper",
+                    yref="paper",
+                    x=1.01,
+                    y=-0.35,  # Match market chart position
+                    sizex=0.30,  # Match market chart size
+                    sizey=0.27,  # Match market chart size
+                    xanchor="right",  # Match market chart anchor
+                    yanchor="bottom",
+                    layer="above",
+                    opacity=1.0,
+                )
+            )
+        
+        # Add data source annotation below x-axis (matching market chart)
+        transform_text = f" ({transform})" if transform and transform != "none" else ""
+        symbols_text = ', '.join([s.strip() for s in symbols.split(',') if s.strip()])
+        
+        # Add warning about failed symbols if any
+        warning_text = ""
+        if failed_symbols:
+            warning_text = f"<br><span style='color:orange;font-size:8px'>⚠ Failed to load: {', '.join(failed_symbols)}</span>"
+        
+        fig.add_annotation(
+            x=0,
+            y=-0.15,  # Match market chart position
+            text=f"<i><span style='font-size:12px'>Financial Data: {symbols_text}{transform_text}</span></i><br><span style='font-size:9px'>Chart: Opening Bell Daily • Source: Yahoo Finance</span>{warning_text}",
+            showarrow=False,
+            font=dict(color="gray", size=10),
+            xref="paper",
+            yref="paper",
+            xanchor="left",
+            yanchor="top",
+            align="left"  # Match market chart
+        )
+        
+        # Return the chart in the same format as other widgets
+        import json
         return json.loads(fig.to_json())
     
     except Exception as e:
