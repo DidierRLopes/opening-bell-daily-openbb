@@ -173,7 +173,7 @@ def get_market_snapshot(raw: bool = False):
         row_height = (table_height - header_height) / num_rows
 
         # Adjust column positions to add more spacing
-        header_positions = [0, 0.35, 0.65, 1]  # Spread out column centers
+        header_positions = [0.02, 0.42, 0.72, 1]  # Give more space to first column with consistent left margin
         header_alignments = ['left', 'center', 'center', 'right']
 
         # Add header text annotations
@@ -212,11 +212,12 @@ def get_market_snapshot(raw: bool = False):
                 y=y_center,
                 text=f"<b>{index_value}</b>",  # Added bold HTML tags
                 showarrow=False,
-                font=dict(size=16, color='black'),
+                font=dict(size=16, color='black', family="Arial"),
                 xref="paper",
                 yref="paper",
                 xanchor="left",
-                yanchor="middle"
+                yanchor="middle",
+                align="left"
             )
             # Add alternating row background
             if i % 2 == 0:
