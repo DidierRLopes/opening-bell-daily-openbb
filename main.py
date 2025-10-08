@@ -157,16 +157,16 @@ def get_market_snapshot(raw: bool = False, theme: str = "dark"):
             daily_negative_color = "#FF4444"  # Red for negative in dark mode
             ytd_positive_color = "#2D9BF0"    # Blue for positive in dark mode
             ytd_negative_color = "#FF4444"    # Red for negative in dark mode
-            row_bg_color = "#1a1a1d"         # Slightly lighter dark for alternating rows
+            row_bg_color = "#16161a"         # Very subtle darker shade for alternating rows
         else:
-            bg_color = "#FFFFFF"
+            bg_color = "#F4FEFF"
             text_color = "#333333"
             header_text_color = "#000000"
             daily_positive_color = "#0024b5"  # Blue for positive in light mode
             daily_negative_color = "#c81c1d"  # Red for negative in light mode
             ytd_positive_color = "#0024b5"    # Blue for positive in light mode
             ytd_negative_color = "#c81c1d"    # Red for negative in light mode
-            row_bg_color = "#edf7f8"          # Light blue for alternating rows
+            row_bg_color = "#edf7f8"          # Alternating row color (alternates with main bg #F4FEFF)
 
         # Create the figure
         fig = go.Figure()
@@ -513,7 +513,7 @@ def get_market_snapshot(raw: bool = False, theme: str = "dark"):
                     xref="paper",
                     yref="paper",
                     x=1.01,  # Changed from 0.98 to 1.0 to move it closer to the right side
-                    y=-0.05,  # Aligned with the annotation y-position
+                    y=-0.07,  # Aligned with the annotation y-position
                     sizex=0.18,
                     sizey=0.15,
                     xanchor="right", 
@@ -776,9 +776,9 @@ def get_fred_series(
                     xref="paper",
                     yref="paper",
                     x=1.01,
-                    y=-0.35,
-                    sizex=0.30,
-                    sizey=0.27,
+                    y=-0.2,
+                    sizex=0.25,
+                    sizey=0.21,
                     xanchor="right", 
                     yanchor="bottom",
                     layer="above",
@@ -789,7 +789,7 @@ def get_fred_series(
         # Add data source annotation below x-axis
         fig.add_annotation(
             x=0,
-            y=-0.15,  # Position below x-axis
+            y=-0.1,  # Position below x-axis
             text=f"<i><span style='font-size:12px'>FRED Economic Data: {', '.join(symbol_list)}</span></i><br><span style='font-size:9px'>Chart: Opening Bell Daily • Source: Federal Reserve Economic Data (FRED)</span>",
             showarrow=False,
             font=dict(color="gray", size=10),
@@ -1007,9 +1007,9 @@ def get_market_chart(
                     xref="paper",
                     yref="paper",
                     x=1.01,
-                    y=-0.35,
-                    sizex=0.30,
-                    sizey=0.27,
+                    y=-0.25,
+                    sizex=0.25,
+                    sizey=0.21,
                     xanchor="right", 
                     yanchor="bottom",
                     layer="above",
@@ -1282,9 +1282,9 @@ def get_yfinance_chart(
                     xref="paper",
                     yref="paper",
                     x=1.01,
-                    y=-0.35,  # Match market chart position
-                    sizex=0.30,  # Match market chart size
-                    sizey=0.27,  # Match market chart size
+                    y=-0.23,
+                    sizex=0.25,
+                    sizey=0.21,
                     xanchor="right",  # Match market chart anchor
                     yanchor="bottom",
                     layer="above",
@@ -1303,7 +1303,7 @@ def get_yfinance_chart(
         
         fig.add_annotation(
             x=0,
-            y=-0.15,  # Match market chart position
+            y=-0.1,  # Match market chart position
             text=f"<i><span style='font-size:12px'>Financial Data: {symbols_text}{transform_text}</span></i><br><span style='font-size:9px'>Chart: Opening Bell Daily • Source: Yahoo Finance</span>{warning_text}",
             showarrow=False,
             font=dict(color="gray", size=10),

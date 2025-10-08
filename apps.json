@@ -14,22 +14,23 @@
           "i": "market-snapshot",
           "x": 0,
           "y": 2,
-          "w": 40,
-          "h": 14,
+          "w": 30,
+          "h": 15,
           "groups": []
         },
         {
           "i": "market-chart",
           "x": 0,
-          "y": 16,
-          "w": 40,
-          "h": 12,
+          "y": 17,
+          "w": 32,
+          "h": 15,
           "state": {
             "params": {
               "symbol": [
                 "^GSPC",
                 "GC=F",
-                "BTC-USD"
+                "BTC-USD",
+                "^IXIC"
               ],
               "start_date": "2024-10-07",
               "transform": "cumulative_return"
@@ -47,8 +48,8 @@
           "i": "yfinance-chart",
           "x": 0,
           "y": 2,
-          "w": 40,
-          "h": 12,
+          "w": 36,
+          "h": 17,
           "state": {
             "params": {
               "symbols": "MSFT,TSLA,AAPL,AMZN,META,GOOG",
@@ -68,11 +69,12 @@
           "i": "fred-series",
           "x": 0,
           "y": 2,
-          "w": 40,
-          "h": 12,
+          "w": 35,
+          "h": 18,
           "state": {
             "params": {
               "symbols": "UNRATE,FEDFUNDS,GDP",
+              "start_date": "2023-10-08",
               "end_date": "2025-09-26",
               "frequency": "m",
               "transform": "pch"
