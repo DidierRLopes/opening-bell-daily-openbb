@@ -68,7 +68,7 @@ def health_check():
 
 
 @app.get("/market_snapshot")
-def get_market_snapshot(raw: bool = False):
+def get_market_snapshot(raw: bool = False, theme: str = "dark"):
     """Get current market snapshot of major indices and assets"""
     
     try:
@@ -148,6 +148,26 @@ def get_market_snapshot(raw: bool = False):
         ytd_formatted = [f"{val:.2f}%" for val in df['YTD']]
         value_formatted = [f"{val:,.2f}" for val in df['Value']]
 
+        # Define theme colors
+        if theme == "dark":
+            bg_color = "#151518"
+            text_color = "#FFFFFF"
+            header_text_color = "#FFFFFF"
+            daily_positive_color = "#2D9BF0"  # Blue for positive in dark mode
+            daily_negative_color = "#FF4444"  # Red for negative in dark mode
+            ytd_positive_color = "#2D9BF0"    # Blue for positive in dark mode
+            ytd_negative_color = "#FF4444"    # Red for negative in dark mode
+            row_bg_color = "#1a1a1d"         # Slightly lighter dark for alternating rows
+        else:
+            bg_color = "#FFFFFF"
+            text_color = "#333333"
+            header_text_color = "#000000"
+            daily_positive_color = "#0024b5"  # Blue for positive in light mode
+            daily_negative_color = "#c81c1d"  # Red for negative in light mode
+            ytd_positive_color = "#0024b5"    # Blue for positive in light mode
+            ytd_negative_color = "#c81c1d"    # Red for negative in light mode
+            row_bg_color = "#edf7f8"          # Light blue for alternating rows
+
         # Create the figure
         fig = go.Figure()
 
@@ -186,7 +206,7 @@ def get_market_snapshot(raw: bool = False):
                 y=1.0 - (header_height/2),  # Center in header area
                 text=f"<b>{header}</b>",
                 showarrow=False,
-                font=dict(size=20, color='black'),
+                font=dict(size=20, color=header_text_color),
                 xref="paper",
                 yref="paper",
                 xanchor=header_alignments[i],
@@ -200,7 +220,7 @@ def get_market_snapshot(raw: bool = False):
             x1=1,
             y0=1.0 - header_height,
             y1=1.0 - header_height,
-            line=dict(color="black", width=2),
+            line=dict(color=text_color, width=2),
             xref="paper",
             yref="paper"
         )
@@ -213,7 +233,7 @@ def get_market_snapshot(raw: bool = False):
                 y=y_center,
                 text=f"<b>{index_value}</b>",  # Added bold HTML tags
                 showarrow=False,
-                font=dict(size=18, color='black', family="Arial"),
+                font=dict(size=18, color=text_color, family="Arial"),
                 xref="paper",
                 yref="paper",
                 xanchor="left",
@@ -228,7 +248,7 @@ def get_market_snapshot(raw: bool = False):
                     x1=1,
                     y0=1.0 - header_height - ((i+1) * row_height),
                     y1=1.0 - header_height - (i * row_height),
-                    fillcolor='#edf7f8',
+                    fillcolor=row_bg_color,
                     line=dict(width=0),
                     xref="paper",
                     yref="paper"
@@ -256,7 +276,7 @@ def get_market_snapshot(raw: bool = False):
             x1=header_positions[1],
             y0=1.0 - header_height,  # Start below the header
             y1=1.0 - header_height - (num_rows * row_height),  # End at the bottom of the table
-            line=dict(color="black", width=1),
+            line=dict(color=text_color, width=1),
             xref="paper",
             yref="paper"
         )
@@ -268,7 +288,7 @@ def get_market_snapshot(raw: bool = False):
             x1=header_positions[2],
             y0=1.0 - header_height,  # Start below the header
             y1=1.0 - header_height - (num_rows * row_height),  # End at the bottom of the table
-            line=dict(color="black", width=1),
+            line=dict(color=text_color, width=1),
             xref="paper",
             yref="paper"
         )
@@ -279,8 +299,8 @@ def get_market_snapshot(raw: bool = False):
             ytd_change = row['YTD']
             
             # Determine colors based on positive/negative values
-            daily_color = "#0024b5" if daily_change >= 0 else "#c81c1d"
-            ytd_color = "#0024b5" if ytd_change >= 0 else "#c81c1d"
+            daily_color = daily_positive_color if daily_change >= 0 else daily_negative_color
+            ytd_color = ytd_positive_color if ytd_change >= 0 else ytd_negative_color
             
             # Calculate y-positions to align with table rows
             y_center = 1.0 - header_height - (i * row_height) - (row_height / 2)
@@ -357,7 +377,7 @@ def get_market_snapshot(raw: bool = False):
                 else:
                     daily_text_x = daily_x0 - 0.01
                     daily_text_anchor = "right"
-                daily_text_color = "black"
+                daily_text_color = text_color
             
             # Add 1-day change text annotation
             fig.add_annotation(
@@ -392,7 +412,7 @@ def get_market_snapshot(raw: bool = False):
                     else:
                         ytd_text_x = ytd_x0 - 0.01
                         ytd_text_anchor = "right"
-                    ytd_text_color = "black"
+                    ytd_text_color = text_color
                 
                 # Add YTD change text annotation
                 fig.add_annotation(
@@ -432,7 +452,7 @@ def get_market_snapshot(raw: bool = False):
                 y=y_center,
                 text=value_text,
                 showarrow=False,
-                font=dict(color="black", size=17),
+                font=dict(color=text_color, size=17),
                 xref="paper",
                 yref="paper",
                 xanchor="right",
@@ -444,9 +464,10 @@ def get_market_snapshot(raw: bool = False):
             margin=dict(l=20, r=20, t=10, b=30),  # Increased bottom margin from 20 to 40
             height=len(df) * 40,  # Added 20px more height for spacing
             width=900,  # Increased width from 800 to 900 for more spacing
-            plot_bgcolor='#F4FEFF',
-            paper_bgcolor='#F4FEFF',
+            plot_bgcolor=bg_color,
+            paper_bgcolor=bg_color,
             dragmode=False,  # Disable dragging
+            font=dict(color=text_color),
             xaxis=dict(
                 showticklabels=False,
                 showgrid=False,
@@ -476,7 +497,8 @@ def get_market_snapshot(raw: bool = False):
         )
 
         # Add a footer with data source information and logo on the same line
-        image_path = Path(__file__).parent.resolve() / "static" / "obd.png"
+        logo_filename = "obd_dark.png" if theme == "dark" else "obd.png"
+        image_path = Path(__file__).parent.resolve() / "static" / logo_filename
         
         # Add logo on the right if available
         if image_path.exists():
@@ -702,11 +724,11 @@ def get_fred_series(
                     )
                 ))
         
-        # Update layout with theme - matching market_snapshot styling
+        # Update layout with theme - supporting both dark and light modes
         layout_config = {
             "margin": dict(l=20, r=20, t=10 if not chart_title else 50, b=80),  # Adjust top margin if title exists
-            "paper_bgcolor": 'white',
-            "plot_bgcolor": 'white',
+            "paper_bgcolor": bg_color,
+            "plot_bgcolor": bg_color,
             "dragmode": False,
             "font": dict(color=text_color),
             "xaxis": dict(
@@ -741,7 +763,8 @@ def get_fred_series(
         fig.update_layout(**layout_config)
         
         # Add watermark logo in center of plot
-        image_path = Path(__file__).parent.resolve() / "static" / "obd.png"
+        logo_filename = "obd_dark.png" if theme == "dark" else "obd.png"
+        image_path = Path(__file__).parent.resolve() / "static" / logo_filename
         if image_path.exists():
             with open(image_path, "rb") as img_file:
                 encoded_image = base64.b64encode(img_file.read()).decode('utf-8')
@@ -826,10 +849,12 @@ def get_market_chart(
         
         # Define theme colors
         if theme == "dark":
+            bg_color = "#151518"
             text_color = "#FFFFFF"
             grid_color = "rgba(51, 51, 51, 0.3)"
             colors = ["#FF8000", "#2D9BF0", "#00AA44", "#FF4444", "#AA44FF", "#FF8844", "#44FF88"]
         else:
+            bg_color = "#FFFFFF"
             text_color = "#333333"
             grid_color = "rgba(221, 221, 221, 0.3)"
             colors = ["#2E5090", "#00AA44", "#FF6B35", "#8A2BE2", "#DC143C", "#228B22", "#FF1493"]
@@ -930,11 +955,11 @@ def get_market_chart(
                 status_code=404
             )
         
-        # Update layout with theme - matching FRED styling
+        # Update layout with theme - supporting both dark and light modes
         layout_config = {
             "margin": dict(l=20, r=20, t=10 if not chart_title else 50, b=80),
-            "paper_bgcolor": 'white',
-            "plot_bgcolor": 'white',
+            "paper_bgcolor": bg_color,
+            "plot_bgcolor": bg_color,
             "dragmode": False,
             "font": dict(color=text_color),
             "xaxis": dict(
@@ -969,7 +994,8 @@ def get_market_chart(
         fig.update_layout(**layout_config)
         
         # Add watermark logo in center of plot
-        image_path = Path(__file__).parent.resolve() / "static" / "obd.png"
+        logo_filename = "obd_dark.png" if theme == "dark" else "obd.png"
+        image_path = Path(__file__).parent.resolve() / "static" / logo_filename
         if image_path.exists():
             with open(image_path, "rb") as img_file:
                 encoded_image = base64.b64encode(img_file.read()).decode('utf-8')
@@ -1194,19 +1220,21 @@ def get_yfinance_chart(
         else:
             y_title = "Price"
         
-        # Configure layout based on theme (matching market chart exactly)
-        if theme == "light":
-            text_color = "black"
-            grid_color = "#E5E5E5"
+        # Configure layout based on theme - supporting both dark and light modes
+        if theme == "dark":
+            bg_color = "#151518"
+            text_color = "#FFFFFF"
+            grid_color = "rgba(51, 51, 51, 0.3)"
         else:
-            text_color = "black"  # Use black text on white background
-            grid_color = "#E5E5E5"
+            bg_color = "#FFFFFF"
+            text_color = "#333333"
+            grid_color = "rgba(221, 221, 221, 0.3)"
         
-        # Update layout with theme - matching market chart styling exactly
+        # Update layout with theme - supporting both dark and light modes
         layout_config = {
-            "margin": dict(l=20, r=20, t=10 if not chart_title else 50, b=80),  # Match market chart
-            "paper_bgcolor": 'white',
-            "plot_bgcolor": 'white',
+            "margin": dict(l=20, r=20, t=10 if not chart_title else 50, b=80),
+            "paper_bgcolor": bg_color,
+            "plot_bgcolor": bg_color,
             "dragmode": False,
             "font": dict(color=text_color),
             "xaxis": dict(
@@ -1243,7 +1271,8 @@ def get_yfinance_chart(
         # Add watermark logo in same position as market chart
         from pathlib import Path
         import base64
-        image_path = Path(__file__).parent.resolve() / "static" / "obd.png"
+        logo_filename = "obd_dark.png" if theme == "dark" else "obd.png"
+        image_path = Path(__file__).parent.resolve() / "static" / logo_filename
         if image_path.exists():
             with open(image_path, "rb") as img_file:
                 encoded_image = base64.b64encode(img_file.read()).decode('utf-8')
