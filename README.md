@@ -1,17 +1,25 @@
-# Opening Bell Daily Market Snapshot widget for OpenBB Workspace
+# Opening Bell Daily
 
-<img width="943" alt="Screenshot 2025-03-01 at 12 04 47 AM" src="https://github.com/user-attachments/assets/a5a7766e-faf9-4d48-8fdb-68b97bc2924c" />
+<img width="1200" alt="CleanShot 2025-10-07 at 23 03 05@2x" src="https://github.com/user-attachments/assets/5cf487f0-25b7-4c4c-a251-bc6b906f25d2" />
 
-Add to your OpenBB workspace by adding the following custom backend:
+Add to your OpenBB workspace by going to [https://pro.openbb.co/](https://pro.openbb.co/), clicking on "Apps" and clicking "Connect Backend".
 
-https://openbb-opening-bell-daily.fly.dev
+For endpoint URL you can use https://openbb-opening-bell-daily.fly.dev which I'm hosting personally.
 
-<img width="817" alt="Screenshot 2025-03-01 at 12 01 29 AM" src="https://github.com/user-attachments/assets/0f6ec676-330c-436a-bd27-b5528c020994" />
+Then you will want to add a Authentication for access to FRED.
+- Key should be: X-FRED-API-KEY
+- Value should be get from here: https://fred.stlouisfed.org/docs/api/api_key.html
 
-You may also run it locally with
+Something like this:
+
+<img width="600" alt="CleanShot 2025-10-07 at 23 00 50@2x" src="https://github.com/user-attachments/assets/8afcd4e7-41bf-4390-b8ac-645cf308af1a" />
+
+---
+
+Instead of utilizing my hosted app, you can run this locally with
 
 ```bash
 uvicorn main:app --port 8080
 ```
 
-and update the custom backend URL accordingly.
+and update the endpoint URL to utilize http://127.0.0.1:8080
