@@ -2,6 +2,10 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
+# Optional: allow forcing a fresh dependency install by bumping this arg
+ARG CACHE_BUST=1
+RUN echo "CACHE_BUST=$CACHE_BUST"
+
 COPY requirements.txt .
 # Upgrade pip to ensure latest wheel support, then install deps
 RUN pip install --upgrade pip \

@@ -13,6 +13,7 @@ import plotly.graph_objects as go
 # from plotly_templates import dark_template
 import pandas as pd
 from openbb import obb
+from fredapi import Fred
 from datetime import datetime
 from fastapi.staticfiles import StaticFiles
 import pytz
@@ -564,75 +565,104 @@ def get_fred_series(
                     status_code=400
                 )
         
-        # Get FRED API key from custom header and set it in OpenBB credentials
+        # Get FRED API key from custom header
         fred_api_key = request.headers.get("X-FRED-API-KEY")
-        if fred_api_key:
-            obb.user.credentials.fred_api_key = fred_api_key
+        if not fred_api_key:
+            return JSONResponse(
+                content={"error": "FRED API key is required. Please provide X-FRED-API-KEY header."}, 
+                status_code=400
+            )
         
-        # Prepare kwargs for OpenBB call - use comma-separated string for compatibility
-        fred_kwargs = {
-            "symbol": ",".join(symbol_list),  # Convert list to comma-separated string
-            "provider": "fred"
-        }
+        # Initialize FRED API client
+        try:
+            fred = Fred(api_key=fred_api_key)
+        except Exception as e:
+            return JSONResponse(
+                content={"error": f"Failed to initialize FRED client: {str(e)}"}, 
+                status_code=500
+            )
         
-        # Add parameters with proper validation
-        if limit and limit > 0:
-            fred_kwargs["limit"] = limit
-            
-        if aggregation_method and aggregation_method != "":
-            fred_kwargs["aggregation_method"] = aggregation_method
-            
-        # Handle date parameters - they can be None, empty string, or actual dates
+        # Prepare date parameters
+        start_dt = None
+        end_dt = None
+        
         if start_date and str(start_date).strip() not in ["", "null", "none", "None"]:
-            fred_kwargs["start_date"] = start_date
+            start_dt = start_date
             
         if end_date and str(end_date).strip() not in ["", "null", "none", "None"]:
-            fred_kwargs["end_date"] = end_date
-            
-        if frequency and frequency != "" and frequency != "null":
-            fred_kwargs["frequency"] = frequency
-            
-        if transform and transform != "" and transform != "null":
-            fred_kwargs["transform"] = transform
+            end_dt = end_date
         
-        # Debug: Print final kwargs
-        print(f"OpenBB kwargs: {fred_kwargs}")
-        
-        # Get FRED series data using OpenBB with better error handling
+        # Get FRED series data using fredapi
         try:
-            result = obb.economy.fred_series(**fred_kwargs)
-            df = result.to_df()
-        except Exception as obb_error:
-            error_msg = str(obb_error)
-            print(f"OpenBB Exception caught: {error_msg}")
+            # Collect data for all symbols
+            all_series = {}
             
-            if "Results not found" in error_msg or "No data" in error_msg:
+            for symbol in symbol_list:
+                try:
+                    # Get series data
+                    series_data = fred.get_series(
+                        symbol, 
+                        observation_start=start_dt, 
+                        observation_end=end_dt,
+                        limit=limit if limit and limit > 0 else None
+                    )
+                    
+                    # Apply frequency conversion if specified
+                    if frequency and frequency != "" and frequency != "null":
+                        freq_map = {
+                            'a': 'YE', 'q': 'QE', 'm': 'ME', 'w': 'W', 'd': 'D'
+                        }
+                        if frequency in freq_map:
+                            if aggregation_method == "avg":
+                                series_data = series_data.resample(freq_map[frequency]).mean()
+                            elif aggregation_method == "sum":
+                                series_data = series_data.resample(freq_map[frequency]).sum()
+                            else:  # eop (end of period)
+                                series_data = series_data.resample(freq_map[frequency]).last()
+                    
+                    # Apply transform if specified
+                    if transform and transform != "" and transform != "null":
+                        if transform == "chg":
+                            series_data = series_data.diff()
+                        elif transform == "ch1":
+                            series_data = series_data.diff(periods=12)  # Change from year ago
+                        elif transform == "pch":
+                            series_data = series_data.pct_change() * 100
+                        elif transform == "pc1":
+                            series_data = series_data.pct_change(periods=12) * 100  # Percent change from year ago
+                        elif transform == "log":
+                            import numpy as np
+                            series_data = np.log(series_data)
+                    
+                    all_series[symbol] = series_data
+                    
+                except Exception as series_error:
+                    print(f"Error fetching {symbol}: {str(series_error)}")
+                    continue
+            
+            if not all_series:
                 return JSONResponse(
                     content={
-                        "error": f"No data found for symbols {', '.join(symbol_list)} with the specified parameters.",
+                        "error": f"No data found for any symbols: {', '.join(symbol_list)}",
                         "suggestions": [
-                            "Try using a longer date range (e.g., 1-2 years)",
-                            "Remove frequency conversion (annual data may not be available for short periods)", 
-                            "Try different transform options or use raw data",
-                            "Check if the FRED series symbols are correct (PCENOW, RPI)",
-                            "Some series may not have daily/recent data"
-                        ],
-                        "parameters_used": {
-                            "symbols": symbol_list,
-                            "start_date": start_date,
-                            "end_date": end_date,
-                            "frequency": frequency,
-                            "transform": transform,
-                            "aggregation_method": aggregation_method
-                        }
+                            "Check if the FRED series symbols are correct",
+                            "Try a different date range",
+                            "Some series may not have recent data"
+                        ]
                     }, 
                     status_code=404
                 )
-            else:
-                return JSONResponse(
-                    content={"error": f"FRED API error: {error_msg}"}, 
-                    status_code=500
-                )
+            
+            # Combine all series into a DataFrame
+            df = pd.DataFrame(all_series)
+            
+        except Exception as fred_error:
+            error_msg = str(fred_error)
+            print(f"FRED API Exception caught: {error_msg}")
+            return JSONResponse(
+                content={"error": f"FRED API error: {error_msg}"}, 
+                status_code=500
+            )
         
         if df.empty:
             return JSONResponse(
