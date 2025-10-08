@@ -1051,15 +1051,13 @@ def get_market_chart(
 
 @app.get("/yfinance_chart")
 def get_yfinance_chart(
-    request: Request,
     symbols: str = "^GSPC",
     chart_title: str = "",
     start_date: str = None,
-    transform: str = ""
+    transform: str = "",
+    theme: str = "dark"
 ):
     try:
-        # Get theme from request headers
-        theme = request.headers.get("theme", "dark")
         
         # Validate start_date
         if start_date:
