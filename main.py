@@ -193,8 +193,8 @@ def get_market_snapshot(raw: bool = False, theme: str = "dark"):
         header_height = 0.1  # Header takes up 10% of the paper height
         row_height = (table_height - header_height) / num_rows
 
-        # Adjust column positions to add more spacing
-        header_positions = [0.02, 0.42, 0.64, 1]  # Move YTD column even more to the left (0.68 -> 0.64)
+        # Adjust column positions to give more space to Value column
+        header_positions = [0.02, 0.35, 0.6, 1]  # Move 1-day change and YTD more to the left
         header_alignments = ['left', 'center', 'center', 'right']
 
         # Add header text annotations
