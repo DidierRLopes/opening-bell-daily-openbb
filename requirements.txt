@@ -1,14 +1,16 @@
-# Core web framework
-fastapi>=0.116.2
-uvicorn>=0.35.0
+# Core web framework (match local env)
+fastapi==0.115.8
+uvicorn==0.34.2
 
-# Data processing
-pandas>=2.3.3
-numpy>=2.3.3
+# Data processing (match local env)
+pandas==2.2.3
+numpy==1.23.5
 
-# Financial data
-openbb>=4.4.5
-openbb-yfinance>=1.4.7
+# Financial data (match local env)
+openbb==4.4.4
+openbb-core==1.4.7
+openbb-yfinance==1.4.4
+openbb-fred==1.4.4
 
 # Visualization
 plotly>=6.0.0

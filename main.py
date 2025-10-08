@@ -564,12 +564,14 @@ def get_fred_series(
                     status_code=400
                 )
         
-        # Get FRED API key from custom header
+        # Get FRED API key from custom header and set it in OpenBB credentials
         fred_api_key = request.headers.get("X-FRED-API-KEY")
+        if fred_api_key:
+            obb.user.credentials.fred_api_key = fred_api_key
         
-        # Prepare kwargs for OpenBB call
+        # Prepare kwargs for OpenBB call - use comma-separated string for compatibility
         fred_kwargs = {
-            "symbol": symbol_list,
+            "symbol": ",".join(symbol_list),  # Convert list to comma-separated string
             "provider": "fred"
         }
         
@@ -592,9 +594,6 @@ def get_fred_series(
             
         if transform and transform != "" and transform != "null":
             fred_kwargs["transform"] = transform
-            
-        if fred_api_key:
-            fred_kwargs["api_key"] = fred_api_key
         
         # Debug: Print final kwargs
         print(f"OpenBB kwargs: {fred_kwargs}")
