@@ -174,7 +174,7 @@ def get_market_snapshot(raw: bool = False):
         row_height = (table_height - header_height) / num_rows
 
         # Adjust column positions to add more spacing
-        header_positions = [0.02, 0.42, 0.72, 1]  # Give more space to first column with consistent left margin
+        header_positions = [0.02, 0.42, 0.64, 1]  # Move YTD column even more to the left (0.68 -> 0.64)
         header_alignments = ['left', 'center', 'center', 'right']
 
         # Add header text annotations
@@ -186,7 +186,7 @@ def get_market_snapshot(raw: bool = False):
                 y=1.0 - (header_height/2),  # Center in header area
                 text=f"<b>{header}</b>",
                 showarrow=False,
-                font=dict(size=18, color='black'),
+                font=dict(size=20, color='black'),
                 xref="paper",
                 yref="paper",
                 xanchor=header_alignments[i],
@@ -213,7 +213,7 @@ def get_market_snapshot(raw: bool = False):
                 y=y_center,
                 text=f"<b>{index_value}</b>",  # Added bold HTML tags
                 showarrow=False,
-                font=dict(size=16, color='black', family="Arial"),
+                font=dict(size=18, color='black', family="Arial"),
                 xref="paper",
                 yref="paper",
                 xanchor="left",
@@ -284,7 +284,7 @@ def get_market_snapshot(raw: bool = False):
             
             # Calculate y-positions to align with table rows
             y_center = 1.0 - header_height - (i * row_height) - (row_height / 2)
-            bar_height = row_height * 0.4
+            bar_height = row_height * 0.5
             y_top_centered = y_center + (bar_height / 2)
             y_bottom_centered = y_center - (bar_height / 2)
             
@@ -365,7 +365,7 @@ def get_market_snapshot(raw: bool = False):
                 y=y_center,
                 text=daily_text,
                 showarrow=False,
-                font=dict(color=daily_text_color, size=14),
+                font=dict(color=daily_text_color, size=17),
                 xref="paper",
                 yref="paper",
                 xanchor=daily_text_anchor,
@@ -400,7 +400,7 @@ def get_market_snapshot(raw: bool = False):
                     y=y_center,
                     text=ytd_text,
                     showarrow=False,
-                    font=dict(color=ytd_text_color, size=14),
+                    font=dict(color=ytd_text_color, size=17),
                     xref="paper",
                     yref="paper",
                     xanchor=ytd_text_anchor,
@@ -432,7 +432,7 @@ def get_market_snapshot(raw: bool = False):
                 y=y_center,
                 text=value_text,
                 showarrow=False,
-                font=dict(color="black", size=14),
+                font=dict(color="black", size=17),
                 xref="paper",
                 yref="paper",
                 xanchor="right",
