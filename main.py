@@ -14,7 +14,7 @@ import plotly.graph_objects as go
 import pandas as pd
 from openbb import obb
 from fredapi import Fred
-from datetime import datetime
+from datetime import datetime, timedelta
 from fastapi.staticfiles import StaticFiles
 import pytz
 import base64
@@ -89,7 +89,9 @@ def get_market_snapshot(raw: bool = False, theme: str = "dark"):
 
         # Get current date and start of year date
         end_date = datetime.now()
-        start_date = datetime(end_date.year, 1, 1)  # Start of the year for YTD
+        start_of_year = datetime(end_date.year, 1, 1)
+        # Fetch extra days before year start to ensure we have previous day for 1-day change
+        start_date = start_of_year - timedelta(days=10)
 
         image_path = Path(__file__).parent.resolve() / "obd.png"
         
@@ -108,14 +110,18 @@ def get_market_snapshot(raw: bool = False, theme: str = "dark"):
                 if df_historical.empty or len(df_historical) < 2:
                     print(f"Not enough data for {symbol}")
                     continue
-                
+
                 # Calculate 1-day percent change
-                daily_change_pct = ((df_historical['close'].iloc[-1] - df_historical['close'].iloc[-2]) / 
+                daily_change_pct = ((df_historical['close'].iloc[-1] - df_historical['close'].iloc[-2]) /
                                     df_historical['close'].iloc[-2]) * 100
-                
-                # Calculate YTD change percent
-                ytd_change_pct = ((df_historical['close'].iloc[-1] - df_historical['close'].iloc[0]) / 
-                                df_historical['close'].iloc[0]) * 100
+
+                # Calculate YTD change percent (use only current year data)
+                df_current_year = df_historical[df_historical.index >= start_of_year.date()]
+                if len(df_current_year) > 0:
+                    ytd_change_pct = ((df_historical['close'].iloc[-1] - df_current_year['close'].iloc[0]) /
+                                    df_current_year['close'].iloc[0]) * 100
+                else:
+                    ytd_change_pct = 0.0  # No current year data yet
                 
                 # Get latest closing price
                 latest_price = round(df_historical['close'].iloc[-1], 2)
@@ -1070,7 +1076,7 @@ def get_yfinance_chart(
                         amount = int(modifier[1:-1])
                         unit = modifier[-1].lower()
                         
-                        from datetime import datetime, timedelta
+                        from datetime import datetime, timedelta, timedelta
                         import dateutil.relativedelta
                         
                         current_date = datetime.now()
@@ -1089,7 +1095,7 @@ def get_yfinance_chart(
             else:
                 # Validate date format
                 try:
-                    from datetime import datetime
+                    from datetime import datetime, timedelta
                     datetime.strptime(start_date, '%Y-%m-%d')
                     # Check if date is not in the future
                     if datetime.strptime(start_date, '%Y-%m-%d') > datetime.now():
@@ -1098,7 +1104,7 @@ def get_yfinance_chart(
                     start_date = None
         
         if not start_date:
-            from datetime import datetime
+            from datetime import datetime, timedelta
             import dateutil.relativedelta
             start_date = (datetime.now() - dateutil.relativedelta.relativedelta(years=1)).strftime('%Y-%m-%d')
         
