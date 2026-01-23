@@ -82,7 +82,7 @@ def get_market_snapshot(raw: bool = False, theme: str = "dark"):
             "ACWI": "MSCI All World",
             "BTC-USD": "Bitcoin",
             "GC=F": "Gold",
-            "SLV": "Silver",
+            "SI=F": "Silver",
             "BZ=F": "Brent Crude",
             "^TNX": "10-Year",
         }
